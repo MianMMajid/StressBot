@@ -1,11 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #000000;
-  --panel: #0a0a0a;
-  --line: #222222;
-  --muted: #888888;
-  --fg: #ffffff;
+  /* VSCode Dark+ tokens */
+  --stress-void: #181818;
+  --stress-bg: #1e1e1e;
+  --stress-panel: #252526;
+  --stress-raised: #2d2d2d;
+  --stress-line: #3c3c3c;
+  --stress-line-bright: #454545;
+  --stress-text: #cccccc;
+  --stress-muted: #9d9d9d;
+  --stress-dim: #6a9955;
+  --stress-accent: #007acc;
+  --stress-accent-dim: #094771;
+  --stress-warn: #cca700;
+  --stress-danger: #f44747;
+  --stress-ok: #89d185;
+  --background: var(--stress-bg);
+  --foreground: var(--stress-text);
 }
 
 @theme inline {
@@ -19,75 +31,28 @@ body {
 }
 
 body {
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--stress-bg);
+  color: var(--stress-text);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-.glass-surface {
-  border: 1px solid rgb(255 255 255 / 0.1);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025)),
-    rgb(17 17 19 / 0.82);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 18px 48px rgb(0 0 0 / 0.3);
-  backdrop-filter: blur(18px);
+@keyframes run-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
 }
 
-.glass-button {
-  border: 1px solid rgb(255 255 255 / 0.14);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.035)),
-    rgb(255 255 255 / 0.035);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 10px 28px rgb(0 0 0 / 0.2);
-  color: #f7f7f8;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease,
-    opacity 160ms ease,
-    transform 160ms ease;
+.run-dot {
+  box-sizing: border-box;
 }
 
-.glass-button:hover:not(:disabled) {
-  border-color: rgb(255 255 255 / 0.36);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.06)),
-    rgb(255 255 255 / 0.06);
-  transform: translateY(-1px);
-}
-
-.glass-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.35;
-}
-
-.glass-button-primary {
-  border-color: rgb(255 255 255 / 0.92);
-  background:
-    linear-gradient(180deg, #ffffff, #e9e9ec);
-  color: #050506;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.85),
-    0 14px 36px rgb(255 255 255 / 0.12),
-    0 10px 28px rgb(0 0 0 / 0.24);
-}
-
-.glass-button-primary:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg, #ffffff, #f4f4f6);
-}
-
-.glass-pill {
-  border: 1px solid rgb(255 255 255 / 0.12);
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.045);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
-  backdrop-filter: blur(14px);
+.run-dot-active {
+  background-color: var(--stress-ok);
+  animation: run-dot-pulse 0.55s step-end infinite;
 }
 
 @keyframes report-reveal {
@@ -101,72 +66,30 @@ body {
   }
 }
 
-.live-scanline {
-  animation: live-scanline 1.8s linear infinite;
-}
-
-.live-signal {
-  animation: live-signal 1.2s ease-in-out infinite;
-}
-
-.live-flicker {
-  animation: live-flicker 2.4s steps(4, end) infinite;
-}
-
-.live-drift {
-  animation: live-drift 5s ease-in-out infinite;
-}
-
-@keyframes live-scanline {
-  from {
-    transform: translateY(-18%);
-  }
-  to {
-    transform: translateY(118%);
-  }
-}
-
-@keyframes live-signal {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-}
-
-@keyframes live-flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.72;
-  }
-}
-
-@keyframes live-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(8px, -6px, 0);
-  }
-}
-
 .report-reveal {
   animation: report-reveal 0.45s ease-out both;
+}
+
+@keyframes log-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.log-expand {
+  animation: log-expand 0.16s ease-out both;
 }
 
 .markdown-report {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   font-size: 13px;
-  line-height: 1.6;
-  color: #c8c8c8;
+  line-height: 1.65;
+  color: #cccccc;
 }
 
 .markdown-report h1 {
@@ -175,10 +98,10 @@ body {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: #e8e8e8;
   margin: 0 0 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #222222;
+  border-bottom: 1px solid var(--stress-accent-dim);
 }
 
 .markdown-report h2 {
@@ -187,7 +110,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: #75beff;
   margin: 1.5rem 0 0.75rem;
 }
 
@@ -195,7 +118,7 @@ body {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
   font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
+  color: #e2c08d;
   margin: 1rem 0 0.5rem;
 }
 
@@ -204,14 +127,14 @@ body {
 }
 
 .markdown-report a {
-  color: #ffffff;
+  color: #3794ff;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .markdown-report hr {
   border: none;
-  border-top: 1px solid #222222;
+  border-top: 1px solid var(--stress-line);
   margin: 1.25rem 0;
 }
 
@@ -219,35 +142,41 @@ body {
   margin: 0.5rem 0 0.5rem 1.1rem;
   padding: 0;
   list-style: square;
+  color: #cccccc;
 }
 
 .markdown-report li {
   margin: 0.25rem 0;
 }
 
+.markdown-report li::marker {
+  color: var(--stress-accent);
+}
+
 .markdown-report code {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
   font-size: 11px;
-  background: #0a0a0a;
-  border: 1px solid #222222;
+  background: var(--stress-raised);
+  border: 1px solid var(--stress-line);
   padding: 0.1rem 0.35rem;
-  color: #ffffff;
+  color: #ce9178;
 }
 
 .markdown-report pre {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
   font-size: 11px;
-  background: #0a0a0a;
-  border: 1px solid #222222;
+  background: var(--stress-void);
+  border: 1px solid var(--stress-line);
   padding: 0.75rem 1rem;
   overflow-x: auto;
-  color: #c8c8c8;
+  color: #9cdcfe;
 }
 
 .markdown-report pre code {
   border: none;
   padding: 0;
   background: transparent;
+  color: inherit;
 }
 
 .markdown-report table {
@@ -260,19 +189,19 @@ body {
 
 .markdown-report th,
 .markdown-report td {
-  border: 1px solid #222222;
+  border: 1px solid var(--stress-line);
   padding: 0.45rem 0.5rem;
   text-align: left;
 }
 
 .markdown-report th {
-  background: #0a0a0a;
-  color: #ffffff;
+  background: var(--stress-panel);
+  color: #75beff;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .markdown-report strong {
-  color: #ffffff;
+  color: #e8e8e8;
   font-weight: 600;
 }
