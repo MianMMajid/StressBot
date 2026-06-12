@@ -1,5 +1,5 @@
-import { UserSimApp } from "@/components/UserSimApp";
+import { StressBotApp } from "@/components/StressBotApp";
 
 export default function Home() {
-  return <UserSimApp />;
+  return <StressBotApp />;
 }

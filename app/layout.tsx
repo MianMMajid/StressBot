@@ -13,9 +13,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StressBot - AI persona stress testing",
+  title: "STRESSBOT — Autonomous stress agent",
   description:
-    "Local demo of AI personas stress-testing product pages and websites.",
+    "Visual simulation of concurrent AI users stress-testing web applications.",
 };
 
 export default function RootLayout({
