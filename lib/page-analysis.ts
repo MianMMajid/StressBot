@@ -60,6 +60,11 @@ function trimEvidence(value: string, max = 180) {
   return clean.length > max ? `${clean.slice(0, max - 1)}...` : clean;
 }
 
+function listEvidence(label: string, items: string[], max = 4) {
+  if (!items.length) return `${label}: none captured`;
+  return `${label}: ${items.slice(0, max).map((item) => `"${trimEvidence(item, 52)}"`).join(", ")}`;
+}
+
 function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFinding {
   const pageText = [
     evidence.title,
@@ -90,19 +95,22 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
   const hasAccessibilityRisk =
     evidence.buttons.length > 12 || evidence.headings.length === 0 || evidence.forms.length > 4;
   const hasClearCta = evidence.buttons.length > 0;
+  const pageName = evidence.title || evidence.finalUrl || evidence.url;
 
   switch (agent.id) {
     case "maya":
       return {
         agentId: agent.id,
         summary: "First impression depends on the hero and first CTA.",
-        quote: `I see "${trimEvidence(hero, 90)}", then I look for one action. The clearest button is "${trimEvidence(cta, 70)}".`,
+        quote: `On ${trimEvidence(pageName, 60)}, I see "${trimEvidence(hero, 90)}", then I look for one action. The clearest button is "${trimEvidence(cta, 70)}".`,
         signal: hasClearCta
           ? "The first-time visitor can identify an action, but the page still needs instant positioning clarity."
           : "The first-time visitor does not get an obvious next action from the first screen.",
         recommendation:
-          "Make the first heading say who this is for, what outcome it produces, and pair it with one primary CTA.",
-        evidence: trimEvidence(hero),
+          hasClearCta
+            ? `Keep "${trimEvidence(cta, 50)}" visually dominant and make the top heading explain the outcome before supporting copy.`
+            : "Add one primary above-the-fold CTA and make the first heading say who this is for and what outcome it produces.",
+        evidence: `${listEvidence("Headings", evidence.headings, 3)}; ${listEvidence("Buttons", evidence.buttons, 3)}`,
         severity: hasClearCta ? "medium" : "high",
         confidence: 88,
       };
@@ -111,14 +119,16 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
         agentId: agent.id,
         summary: "Budget evaluation depends on pricing, plan limits, and ROI proof.",
         quote: hasPricing
-          ? "I can find pricing language, but I still need plan limits and a finance-friendly reason to buy."
-          : "I cannot find pricing or plan language quickly, so I would need another page before I can justify this internally.",
+          ? `I found pricing-related language on ${trimEvidence(pageName, 60)}, but I still need plan limits and a finance-friendly reason to buy.`
+          : `I scanned the captured text and navigation for pricing language, but ${trimEvidence(pageName, 60)} does not make cost easy to evaluate.`,
         signal: hasPricing
           ? "Pricing exists, but buyer confidence depends on comparison detail."
           : "Budget buyer cannot evaluate cost from the inspected page.",
         recommendation:
-          "Expose pricing or plan comparison near the buying CTA, including limits, saved time, and proof.",
-        evidence: trimEvidence(pageText),
+          hasPricing
+            ? "Place plan limits, included usage, and ROI proof directly beside the pricing CTA."
+            : "Add a visible Pricing or Plans path in the captured navigation and summarize what a buyer gets before signup.",
+        evidence: `${listEvidence("Links", evidence.links, 5)}; ${listEvidence("Buttons", evidence.buttons, 4)}`,
         severity: hasPricing ? "medium" : "high",
         confidence: 84,
       };
@@ -126,14 +136,16 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
       return {
         agentId: agent.id,
         summary: "Power users look for setup controls and configuration depth.",
-        quote: `I found "${trimEvidence(form, 90)}" as the main configurable element. I need to know how much control I get after submit.`,
+        quote: `I found "${trimEvidence(form, 90)}" as a configurable element on this page. I need to know how much control I get after submit.`,
         signal:
           evidence.forms.length > 0
             ? "Configuration is discoverable, but advanced control is not yet obvious."
             : "Power users do not see a clear configuration path.",
         recommendation:
-          "Show the setup fields, advanced options, and expected output before asking the user to commit.",
-        evidence: trimEvidence(form),
+          evidence.forms.length > 0
+            ? "Label the setup fields with expected inputs and show the output users will receive after they submit."
+            : "Show a clear setup path or configuration preview for advanced users before the generic CTA.",
+        evidence: `${listEvidence("Form signals", evidence.forms, 6)}; ${listEvidence("Buttons", evidence.buttons, 4)}`,
         severity: evidence.forms.length > 0 ? "medium" : "high",
         confidence: 86,
       };
@@ -141,14 +153,14 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
       return {
         agentId: agent.id,
         summary: "Non-technical users need plain-language outcomes instead of internal product terms.",
-        quote: `The page gives me "${trimEvidence(hero, 100)}". I need the page to tell me what problem gets fixed first.`,
+        quote: `The page gives me "${trimEvidence(hero, 100)}". I need it to tell me what problem gets fixed first in plain language.`,
         signal:
           pageText.length > 900
             ? "The page contains enough content, but the practical next action may be buried."
             : "The page may be too thin to explain the practical value.",
         recommendation:
-          "Lead with three plain-language outcomes and avoid making the user decode product terminology.",
-        evidence: trimEvidence(evidence.visibleText || hero),
+          `Add a plain-language outcome block near "${trimEvidence(hero, 55)}" that says what improves, where, and how fast.`,
+        evidence: trimEvidence(evidence.visibleText || hero, 260),
         severity: "medium",
         confidence: 82,
       };
@@ -157,14 +169,16 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
         agentId: agent.id,
         summary: "Accessibility risk is inferred from page structure and interaction density.",
         quote: hasAccessibilityRisk
-          ? "I see structural risk: many controls, missing headings, or dense form areas. Keyboard and screen-reader checks should be prioritized."
-          : "The structure looks manageable, but I still need visible focus states and readable labels confirmed in-browser.",
+          ? `I see structural risk on ${trimEvidence(pageName, 60)}: ${evidence.headings.length} headings, ${evidence.buttons.length} buttons, and ${evidence.forms.length} form signals.`
+          : `The structure of ${trimEvidence(pageName, 60)} looks manageable, but I still need visible focus states and readable labels confirmed in-browser.`,
         signal: hasAccessibilityRisk
           ? "Accessibility review should happen before shipping this flow."
           : "Accessibility risk is moderate, with focus states and labels still worth checking.",
         recommendation:
-          "Check focus order, heading hierarchy, form labels, contrast, and keyboard operation on the captured page.",
-        evidence: `${evidence.headings.length} headings, ${evidence.buttons.length} buttons, ${evidence.forms.length} form signals`,
+          evidence.headings.length === 0
+            ? "Add a clear heading hierarchy and verify keyboard focus order before running deeper user tests."
+            : "Check focus order, form labels, contrast, and keyboard operation on the captured page.",
+        evidence: `${listEvidence("Headings", evidence.headings, 5)}; ${evidence.buttons.length} buttons; ${evidence.forms.length} form signals`,
         severity: hasAccessibilityRisk ? "critical" : "medium",
         confidence: 80,
       };
@@ -173,14 +187,16 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
         agentId: agent.id,
         summary: "Security buyers need data-handling proof before they try the product.",
         quote: hasSecurity
-          ? "I can see some trust or data language. I still need specifics about storage, recording, credentials, and audit logs."
-          : "Before I paste a real URL or credentials, I need security, privacy, and data-retention details.",
+          ? `I can see trust or data language on ${trimEvidence(pageName, 60)}. I still need specifics about storage, recording, credentials, and audit logs.`
+          : `On ${trimEvidence(pageName, 60)}, I do not see enough security or privacy proof before sharing a real URL or credentials.`,
         signal: hasSecurity
           ? "Trust language exists but may need concrete operational detail."
           : "Enterprise trust is under-explained on this surface.",
         recommendation:
-          "Add a concise trust section covering data retention, credentials, recording, compliance, and auditability.",
-        evidence: trimEvidence(pageText),
+          hasSecurity
+            ? "Turn the existing trust language into concrete operating details: retention, credentials, recording, compliance, and audit logs."
+            : "Add a trust strip or security page link near the first CTA covering privacy, retention, credentials, and auditability.",
+        evidence: `${listEvidence("Trust-related links", evidence.links.filter((item) => includesAny(item, ["privacy", "security", "terms", "compliance"])), 4)}; ${trimEvidence(pageText, 180)}`,
         severity: hasSecurity ? "medium" : "critical",
         confidence: 83,
       };
@@ -190,7 +206,7 @@ function buildFinding(agent: PersonaAgent, evidence: PageEvidence): PersonaFindi
         summary: "The research lead synthesizes recurring persona signals.",
         quote: `The strongest evidence is the inspected page structure: ${evidence.headings.length} headings, ${evidence.buttons.length} buttons, ${evidence.links.length} links.`,
         signal:
-          "The page can be evaluated directionally from real extracted content, but human validation is still needed for high-stakes claims.",
+          `The page-specific review is based on "${trimEvidence(pageName, 70)}", captured DOM text, ${evidence.headings.length} headings, ${evidence.buttons.length} buttons, and a screenshot.`,
         recommendation:
           "Use the first six persona findings as a pre-test backlog, then validate the highest-severity issue with real users.",
         evidence: trimEvidence(link),
