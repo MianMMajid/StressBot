@@ -20,10 +20,16 @@ const severityTone = {
 };
 
 const suggestedPrompts = [
-  "Find why first-time users do not understand our homepage.",
-  "Review pricing and tell me what blocks a budget owner.",
-  "Test this like an enterprise security buyer before signup.",
+  "Test example.com like a skeptical first-time visitor.",
+  "Review localhost:3000 for pricing, trust, and accessibility issues.",
+  "Analyze https://example.com like an enterprise security buyer.",
 ];
+
+function extractUrlFromPrompt(prompt: string) {
+  const tokens = prompt.match(/\b(?:https?:\/\/)?(?:localhost(?::\d+)?|(?:[\w-]+\.)+[a-z]{2,})(?:\/[^\s]*)?/i);
+  if (!tokens?.[0]) return null;
+  return tokens[0].replace(/[),.;!?]+$/, "");
+}
 
 function buildLiveReportMarkdown({
   targetUrl,
@@ -138,7 +144,7 @@ export function UserSimApp() {
   const selectedFinding = analysisFindingByAgent.get(selectedAgentId);
 
   const submitChatRun = () => {
-    const possibleUrl = chatPrompt.match(/https?:\/\/[^\s]+/)?.[0];
+    const possibleUrl = extractUrlFromPrompt(chatPrompt);
     if (possibleUrl && phase !== "RUNNING") {
       setTargetUrl(possibleUrl);
     }
