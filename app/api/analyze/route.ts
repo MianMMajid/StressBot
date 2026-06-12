@@ -12,8 +12,13 @@ function normalizeUrl(value: unknown) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
+  const localTarget = /^(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i.test(
+    trimmed
+  );
   const withProtocol = /^https?:\/\//i.test(trimmed)
     ? trimmed
+    : localTarget
+      ? `http://${trimmed}`
     : `https://${trimmed}`;
 
   try {
