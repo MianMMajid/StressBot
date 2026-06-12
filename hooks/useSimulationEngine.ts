@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  SIMULATION_STEPS,
+  PERSONA_AGENTS,
   SimulationPhase,
   formatTelemetryLine,
+  getAgentRuntime,
 } from "@/lib/simulation";
 
-const TICK_MS = 600;
+const TICK_MS = 520;
+const PROGRESS_STEP = 8;
 
 function nowStamp(): string {
   const d = new Date();
@@ -16,12 +18,12 @@ function nowStamp(): string {
 
 export function useSimulationEngine() {
   const [phase, setPhase] = useState<SimulationPhase>("IDLE");
-  const [targetUrl, setTargetUrl] = useState("https://localhost:3000");
+  const [targetUrl, setTargetUrl] = useState("https://acme-product.test");
   const [logLines, setLogLines] = useState<string[]>([]);
-  /** How many simulation steps have been logged (also next index to append). */
   const [progress, setProgress] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [reportRevealKey, setReportRevealKey] = useState(0);
+  const [selectedAgentId, setSelectedAgentId] = useState(PERSONA_AGENTS[0].id);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -37,11 +39,14 @@ export function useSimulationEngine() {
     setReportRevealKey((k) => k + 1);
   }, []);
 
-  const appendStep = useCallback((index: number) => {
-    const step = SIMULATION_STEPS[index];
-    if (!step) return;
-    const line = formatTelemetryLine(step, nowStamp());
-    setLogLines((prev) => [...prev, line]);
+  const appendTelemetryBatch = useCallback((nextProgress: number) => {
+    const ts = nowStamp();
+    setLogLines((prev) => {
+      const lines = PERSONA_AGENTS.map((agent) =>
+        formatTelemetryLine(agent, nextProgress, ts)
+      );
+      return [...prev, ...lines].slice(-84);
+    });
   }, []);
 
   const run = useCallback(() => {
@@ -49,13 +54,15 @@ export function useSimulationEngine() {
       if (current === "PAUSED") {
         return "RUNNING";
       }
+
       setLogLines([]);
       setDrawerOpen(false);
-      appendStep(0);
-      setProgress(1);
+      setSelectedAgentId(PERSONA_AGENTS[0].id);
+      setProgress(PROGRESS_STEP);
+      appendTelemetryBatch(PROGRESS_STEP);
       return "RUNNING";
     });
-  }, [appendStep]);
+  }, [appendTelemetryBatch]);
 
   const pause = useCallback(() => {
     setPhase((p) => (p === "RUNNING" ? "PAUSED" : p));
@@ -65,9 +72,7 @@ export function useSimulationEngine() {
     clearLoop();
     setPhase((p) => {
       if (p === "RUNNING" || p === "PAUSED") {
-        queueMicrotask(() => {
-          openReport();
-        });
+        queueMicrotask(openReport);
         return "STOPPED";
       }
       return p;
@@ -82,12 +87,16 @@ export function useSimulationEngine() {
 
     const id = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= SIMULATION_STEPS.length) {
-          return prev;
-        }
-        appendStep(prev);
-        const next = prev + 1;
-        if (next >= SIMULATION_STEPS.length) {
+        const next = Math.min(100, prev + PROGRESS_STEP);
+        appendTelemetryBatch(next);
+
+        const activeIndex = Math.min(
+          PERSONA_AGENTS.length - 1,
+          Math.floor((next / 100) * PERSONA_AGENTS.length)
+        );
+        setSelectedAgentId(PERSONA_AGENTS[activeIndex].id);
+
+        if (next >= 100) {
           clearInterval(id);
           intervalRef.current = null;
           queueMicrotask(() => {
@@ -95,6 +104,7 @@ export function useSimulationEngine() {
             openReport();
           });
         }
+
         return next;
       });
     }, TICK_MS);
@@ -104,14 +114,19 @@ export function useSimulationEngine() {
       clearInterval(id);
       intervalRef.current = null;
     };
-  }, [phase, appendStep, clearLoop, openReport]);
+  }, [phase, appendTelemetryBatch, clearLoop, openReport]);
 
-  const viewStepIndex = Math.min(
-    Math.max(0, progress - 1),
-    SIMULATION_STEPS.length - 1
+  const agentRuns = useMemo(
+    () => PERSONA_AGENTS.map((agent) => getAgentRuntime(agent, progress)),
+    [progress]
   );
 
-  const stepsExecuted = SIMULATION_STEPS.slice(0, progress);
+  const selectedAgent =
+    agentRuns.find((agent) => agent.id === selectedAgentId) ?? agentRuns[0];
+
+  const completedAgents = agentRuns.filter(
+    (agent) => agent.status === "complete"
+  ).length;
 
   return {
     phase,
@@ -119,11 +134,14 @@ export function useSimulationEngine() {
     setTargetUrl,
     logLines,
     progress,
+    completedAgents,
     drawerOpen,
     setDrawerOpen,
     reportRevealKey,
-    viewStepIndex,
-    stepsExecuted,
+    selectedAgent,
+    selectedAgentId,
+    setSelectedAgentId,
+    agentRuns,
     run,
     pause,
     stop,

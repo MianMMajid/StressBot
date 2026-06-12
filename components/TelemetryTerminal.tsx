@@ -18,7 +18,7 @@ export function TelemetryTerminal({
   }, [lines, phase]);
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto bg-black p-3 font-mono text-[10px] leading-relaxed text-[#C8C8C8]">
+    <div className="h-full min-h-0 flex-1 overflow-y-auto bg-black p-3 font-mono text-[10px] leading-relaxed text-[#C8C8C8]">
       <div className="mb-2 border-b border-[#222222] pb-2 text-[#888888]">
         <span className="text-white">usersim</span>@telemetry · session_
         {lines.length.toString(16).padStart(4, "0")}
@@ -28,7 +28,7 @@ export function TelemetryTerminal({
           <li
             key={`${i}-${line.slice(0, 24)}`}
             className={
-              line.includes(" ERR>") || line.includes("ERR>")
+              line.includes("CRITICAL") || line.includes("HIGH")
                 ? "text-red-400"
                 : "text-[#C8C8C8]"
             }

@@ -13,9 +13,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UserSim — Autonomous stress agent",
+  title: "UserSim - AI persona panel",
   description:
-    "Visual simulation of an AI user agent stress-testing web applications.",
+    "Frontend demo of AI persona agents reviewing a product or website.",
 };
 
 export default function RootLayout({
