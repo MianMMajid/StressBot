@@ -110,13 +110,16 @@ export function useSimulationEngine() {
         setManualLoginWaiting(true);
         setAnalyzingUrl(false);
       } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Could not open manual login browser";
         setAnalysisError(
-          error instanceof Error ? error.message : "Could not open manual login browser"
+          message
         );
         setManualLoginWaiting(false);
         setManualLoginSessionId(null);
         setManualLoginReason(null);
         setAnalyzingUrl(false);
+        setPhase((current) => (current === "RUNNING" || current === "PAUSED" ? "STOPPED" : current));
       }
     },
     []
