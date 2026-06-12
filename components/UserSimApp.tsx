@@ -269,6 +269,7 @@ export function UserSimApp() {
   );
   const [traceOpen, setTraceOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [inputError, setInputError] = useState("");
 
   const {
     phase,
@@ -297,12 +298,14 @@ export function UserSimApp() {
     ? buildLiveReportMarkdown({ targetUrl, outcome: reportOutcome, analysis })
     : buildBugReportMarkdown({ targetUrl, outcome: reportOutcome, progress });
 
-  const detectedUrl = extractUrlFromPrompt(chatPrompt) ?? targetUrl;
+  const promptUrl = extractUrlFromPrompt(chatPrompt);
+  const detectedUrl = promptUrl ?? "No URL detected";
   const runEnabled =
     phase === "IDLE" ||
     phase === "PAUSED" ||
     phase === "COMPLETED" ||
     phase === "STOPPED";
+  const canSubmitReview = runEnabled && Boolean(promptUrl);
   const activeAgents = agentRuns.filter(
     (agent) => agent.status === "scanning" || agent.status === "reasoning"
   ).length;
@@ -346,22 +349,28 @@ export function UserSimApp() {
   }, [analyzingUrl, phase, screen]);
 
   const submitChatRun = () => {
-    const possibleUrl = extractUrlFromPrompt(chatPrompt);
-    if (possibleUrl) {
-      setTargetUrl(possibleUrl);
+    if (!promptUrl) {
+      setInputError("Paste a public URL or localhost link before running the review.");
+      return;
     }
     if (runEnabled) {
+      setTargetUrl(promptUrl);
+      setInputError("");
       setCopied(false);
       setTraceOpen(false);
       setScreen("process");
-      run(possibleUrl ?? targetUrl);
+      run(promptUrl);
     }
   };
 
   const copyReport = async () => {
-    await navigator.clipboard.writeText(reportMd);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
+    try {
+      await navigator.clipboard.writeText(reportMd);
+    } catch {
+      // Clipboard permissions can be unavailable in some demo browsers.
+    }
   };
 
   const resetFlow = () => {
@@ -369,6 +378,7 @@ export function UserSimApp() {
     setScreen("chat");
     setCopied(false);
     setTraceOpen(false);
+    setInputError("");
   };
 
   if (screen === "chat") {
@@ -413,7 +423,10 @@ export function UserSimApp() {
               </div>
               <textarea
                 value={chatPrompt}
-                onChange={(event) => setChatPrompt(event.target.value)}
+                onChange={(event) => {
+                  setChatPrompt(event.target.value);
+                  setInputError("");
+                }}
                 rows={5}
                 className="block max-h-56 min-h-40 w-full resize-none bg-[#0F1015] px-4 py-4 font-mono text-[14px] leading-7 text-white outline-none placeholder:text-[#777780]"
                 placeholder="review https://example.com @buyer @accessibility"
@@ -425,7 +438,10 @@ export function UserSimApp() {
                     <button
                       key={chip}
                       type="button"
-                      onClick={() => setChatPrompt((prompt) => `${prompt} ${chip}`)}
+                      onClick={() => {
+                        setChatPrompt((prompt) => `${prompt} ${chip}`);
+                        setInputError("");
+                      }}
                       className="ide-chip"
                     >
                       {chip}
@@ -438,7 +454,10 @@ export function UserSimApp() {
                       <button
                         key={prompt}
                         type="button"
-                        onClick={() => setChatPrompt(prompt)}
+                        onClick={() => {
+                          setChatPrompt(prompt);
+                          setInputError("");
+                        }}
                         className="ide-suggestion shrink-0"
                       >
                         {prompt}
@@ -447,11 +466,17 @@ export function UserSimApp() {
                   </div>
                   <button
                     type="submit"
+                    disabled={!canSubmitReview}
                     className="glass-button glass-button-primary shrink-0 px-5 py-3 text-sm font-semibold"
                   >
                     Run review
                   </button>
                 </div>
+                {inputError ? (
+                  <div className="mt-3 rounded-xl border border-[#FFCF70]/30 bg-[#FFCF70]/10 px-3 py-2 text-sm text-[#FFE5AD]">
+                    {inputError}
+                  </div>
+                ) : null}
               </div>
             </form>
 

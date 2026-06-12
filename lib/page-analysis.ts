@@ -228,7 +228,7 @@ export function buildFallbackAnalysis(url: string, reason: string): AnalyzeResul
     ...FALLBACK_EVIDENCE,
     url,
     finalUrl: url,
-    title: "Inspection blocked",
+    title: "Inspection blocked - fallback report",
     visibleText: `The local browser could not inspect this URL. Reason: ${reason}`,
     networkErrors: [reason],
   });

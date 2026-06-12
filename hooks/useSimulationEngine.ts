@@ -19,7 +19,7 @@ function nowStamp(): string {
 
 export function useSimulationEngine() {
   const [phase, setPhase] = useState<SimulationPhase>("IDLE");
-  const [targetUrl, setTargetUrl] = useState("https://acme-product.test");
+  const [targetUrl, setTargetUrl] = useState("example.com");
   const [logLines, setLogLines] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
