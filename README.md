@@ -1,8 +1,10 @@
 # SimsAi
 
-SimsAi is an IDE-style product feedback demo. Paste a website URL and SimsAi runs seven simulated persona agents against the page, same-site routes, copy, trust signals, forms, accessibility signals, and conversion paths. The final output is a severity-coded report with persona-specific recommendations.
+## Live Demo
 
-Live Railway demo: [https://simsai-production-e399.up.railway.app](https://simsai-production-e399.up.railway.app)
+[https://simsai-production-e399.up.railway.app](https://simsai-production-e399.up.railway.app)
+
+SimsAi is an IDE-style product feedback demo. Paste a website URL and SimsAi runs seven simulated persona agents against the page, same-site routes, copy, trust signals, forms, accessibility signals, and conversion paths. The final output is a severity-coded report with persona-specific recommendations.
 
 ## What It Does
 
