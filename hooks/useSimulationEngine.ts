@@ -27,6 +27,8 @@ export function useSimulationEngine() {
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analyzingUrl, setAnalyzingUrl] = useState(false);
+  const [manualLoginWaiting, setManualLoginWaiting] = useState(false);
+  const [manualLoginSessionId, setManualLoginSessionId] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -57,6 +59,8 @@ export function useSimulationEngine() {
       setDrawerOpen(false);
       setAnalysis(null);
       setAnalysisError(null);
+      setManualLoginWaiting(false);
+      setManualLoginSessionId(null);
       setSelectedAgentId(PERSONA_AGENTS[0].id);
       setProgress(PROGRESS_STEP);
       appendTelemetryBatch(PROGRESS_STEP);
@@ -97,11 +101,84 @@ export function useSimulationEngine() {
     void analyzeCurrentUrl(analysisUrl);
   }, [analyzeCurrentUrl, run, targetUrl]);
 
+  const runWithManualLogin = useCallback(async (urlOverride?: string) => {
+    const analysisUrl = urlOverride ?? targetUrl;
+    run();
+    setAnalyzingUrl(true);
+    setManualLoginWaiting(true);
+    setAnalysisError(null);
+
+    try {
+      const response = await fetch("/api/manual-login/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: analysisUrl }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "Could not open manual login browser");
+      }
+
+      const payload = (await response.json()) as { sessionId: string };
+      setManualLoginSessionId(payload.sessionId);
+    } catch (error) {
+      setAnalysisError(
+        error instanceof Error ? error.message : "Could not open manual login browser"
+      );
+      setManualLoginWaiting(false);
+      setAnalyzingUrl(false);
+    }
+  }, [run, targetUrl]);
+
+  const continueManualLogin = useCallback(async () => {
+    if (!manualLoginSessionId) return;
+    setAnalyzingUrl(true);
+    setAnalysisError(null);
+
+    try {
+      const response = await fetch("/api/manual-login/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: manualLoginSessionId }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "Could not capture authenticated page");
+      }
+
+      const result = (await response.json()) as AnalyzeResult;
+      setAnalysis(result);
+      setManualLoginWaiting(false);
+      setManualLoginSessionId(null);
+    } catch (error) {
+      setAnalysisError(
+        error instanceof Error ? error.message : "Could not capture authenticated page"
+      );
+    } finally {
+      setAnalyzingUrl(false);
+    }
+  }, [manualLoginSessionId]);
+
   const pause = useCallback(() => {
     setPhase((p) => (p === "RUNNING" ? "PAUSED" : p));
   }, []);
 
   const stop = useCallback(() => {
+    if (manualLoginSessionId) {
+      void fetch("/api/manual-login/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: manualLoginSessionId }),
+      });
+    }
+    setManualLoginWaiting(false);
+    setManualLoginSessionId(null);
     clearLoop();
     setPhase((p) => {
       if (p === "RUNNING" || p === "PAUSED") {
@@ -109,10 +186,10 @@ export function useSimulationEngine() {
       }
       return p;
     });
-  }, [clearLoop]);
+  }, [clearLoop, manualLoginSessionId]);
 
   useEffect(() => {
-    if (phase !== "RUNNING") {
+    if (phase !== "RUNNING" || manualLoginWaiting) {
       clearLoop();
       return;
     }
@@ -145,7 +222,7 @@ export function useSimulationEngine() {
       clearInterval(id);
       intervalRef.current = null;
     };
-  }, [phase, appendTelemetryBatch, clearLoop]);
+  }, [phase, manualLoginWaiting, appendTelemetryBatch, clearLoop]);
 
   const agentRuns = useMemo(
     () => PERSONA_AGENTS.map((agent) => getAgentRuntime(agent, progress)),
@@ -172,11 +249,15 @@ export function useSimulationEngine() {
     analysis,
     analysisError,
     analyzingUrl,
+    manualLoginWaiting,
+    manualLoginSessionId,
     selectedAgent,
     selectedAgentId,
     setSelectedAgentId,
     agentRuns,
     run: runWithAnalysis,
+    runWithManualLogin,
+    continueManualLogin,
     pause,
     stop,
     clearLoop,

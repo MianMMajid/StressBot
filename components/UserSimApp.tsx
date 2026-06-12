@@ -220,6 +220,11 @@ function buildLiveReportMarkdown({
 - **Headings:** ${analysis.evidence.headings.slice(0, 8).join(" | ") || "none captured"}
 - **Buttons:** ${analysis.evidence.buttons.slice(0, 8).join(" | ") || "none captured"}
 - **Forms:** ${analysis.evidence.forms.slice(0, 8).join(" | ") || "none captured"}
+- **Visited pages:** ${
+    analysis.evidence.visitedPages
+      ?.map((page) => page.title || page.url)
+      .join(" | ") || "primary page only"
+  }
 - **Console errors:** ${analysis.evidence.consoleErrors.length}
 - **Network errors:** ${analysis.evidence.networkErrors.length}
 
@@ -270,6 +275,7 @@ export function UserSimApp() {
   const [traceOpen, setTraceOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [inputError, setInputError] = useState("");
+  const [manualLoginEnabled, setManualLoginEnabled] = useState(false);
 
   const {
     phase,
@@ -284,11 +290,14 @@ export function UserSimApp() {
     analysis,
     analysisError,
     analyzingUrl,
+    manualLoginWaiting,
     selectedAgent,
     selectedAgentId,
     setSelectedAgentId,
     agentRuns,
     run,
+    runWithManualLogin,
+    continueManualLogin,
     pause,
     stop,
   } = useSimulationEngine();
@@ -343,10 +352,14 @@ export function UserSimApp() {
 
   useEffect(() => {
     if (screen !== "process") return;
-    if ((phase === "COMPLETED" || phase === "STOPPED") && !analyzingUrl) {
+    if (
+      (phase === "COMPLETED" || phase === "STOPPED") &&
+      !analyzingUrl &&
+      !manualLoginWaiting
+    ) {
       queueMicrotask(() => setScreen("report"));
     }
-  }, [analyzingUrl, phase, screen]);
+  }, [analyzingUrl, manualLoginWaiting, phase, screen]);
 
   const submitChatRun = () => {
     if (!promptUrl) {
@@ -359,7 +372,11 @@ export function UserSimApp() {
       setCopied(false);
       setTraceOpen(false);
       setScreen("process");
-      run(promptUrl);
+      if (manualLoginEnabled) {
+        runWithManualLogin(promptUrl);
+      } else {
+        run(promptUrl);
+      }
     }
   };
 
@@ -448,6 +465,23 @@ export function UserSimApp() {
                     </button>
                   ))}
                 </div>
+                <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-[#D8D8DE]">
+                  <input
+                    type="checkbox"
+                    checked={manualLoginEnabled}
+                    onChange={(event) => setManualLoginEnabled(event.target.checked)}
+                    className="mt-1 accent-[#79F2A6]"
+                  />
+                  <span>
+                    <span className="block font-medium text-white">
+                      Login required
+                    </span>
+                    <span className="mt-0.5 block text-xs leading-5 text-[#9A9AA4]">
+                      Opens a local browser window so you can log in manually,
+                      then SimsAi captures the authenticated page.
+                    </span>
+                  </span>
+                </label>
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
                   <div className="flex flex-wrap gap-2">
                     {suggestedPrompts.map((prompt) => (
@@ -510,19 +544,32 @@ export function UserSimApp() {
                 <div className="text-sm font-medium text-white">
                   {analysis
                     ? `Captured ${analysis.evidence.title || analysis.evidence.finalUrl}`
+                    : manualLoginWaiting
+                      ? "Manual login browser is open"
                     : analysisError
                       ? `Inspection issue: ${analysisError}`
                       : "Opening page locally"}
                 </div>
                 <div className="mt-1 font-mono text-[11px] text-[#8E8E98]">
-                  {completedAgents}/{PERSONA_AGENTS.length} complete / {activeAgents} active / {progress}%
+                  {manualLoginWaiting
+                    ? "Log in in the browser window, then continue capture"
+                    : `${completedAgents}/${PERSONA_AGENTS.length} complete / ${activeAgents} active / ${progress}%`}
                 </div>
               </div>
               <div className="flex gap-2">
+                {manualLoginWaiting ? (
+                  <button
+                    type="button"
+                    onClick={continueManualLogin}
+                    className="glass-button glass-button-primary px-3 py-2 text-sm font-semibold"
+                  >
+                    Continue after login
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={pause}
-                  disabled={phase !== "RUNNING"}
+                  disabled={phase !== "RUNNING" || manualLoginWaiting}
                   className="glass-button px-3 py-2 text-sm"
                 >
                   Pause
