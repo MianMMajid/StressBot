@@ -31,6 +31,16 @@ function AgentCursors({
   progress: number;
   running: boolean;
 }) {
+  const cursorVariants = [
+    "agent-cursor-founder",
+    "agent-cursor-budget",
+    "agent-cursor-ops",
+    "agent-cursor-merchant",
+    "agent-cursor-access",
+    "agent-cursor-security",
+    "agent-cursor-research",
+  ];
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
       {PERSONA_AGENTS.map((persona, index) => {
@@ -40,7 +50,9 @@ function AgentCursors({
         return (
           <div
             key={persona.id}
-            className={`agent-cursor ${running ? "agent-cursor-live" : ""}`}
+            className={`agent-cursor ${cursorVariants[index]} ${
+              running ? "agent-cursor-live" : ""
+            }`}
             style={{
               left: `${left}%`,
               top: `${top}%`,
@@ -80,6 +92,27 @@ export function AgentViewfinder({
   const visibleConfidence = finding?.confidence ?? agent.confidence;
   const visibleSurface =
     evidence?.title || evidence?.description || agent.browserScene;
+  const crawledPages = evidence?.visitedPages ?? [];
+  const routeLabels = [
+    {
+      label: evidence?.title || "Home",
+      detail: evidence?.finalUrl || targetUrl,
+    },
+    ...crawledPages.map((page) => ({
+      label: page.title || page.headings[0] || new URL(page.url).pathname || "Page",
+      detail: page.url,
+    })),
+  ].slice(0, 4);
+  const visibleRoutes =
+    routeLabels.length > 1
+      ? routeLabels
+      : [
+          ...routeLabels,
+          { label: "Pricing", detail: `${targetUrl.replace(/\/$/, "")}/pricing` },
+          { label: "Docs", detail: `${targetUrl.replace(/\/$/, "")}/docs` },
+          { label: "Settings", detail: `${targetUrl.replace(/\/$/, "")}/settings` },
+        ].slice(0, 4);
+  const activeRouteIndex = Math.floor(agent.progress / 22) % visibleRoutes.length;
 
   return (
     <div
@@ -132,17 +165,18 @@ export function AgentViewfinder({
                     {analyzing ? "Capturing DOM and screenshot" : evidence ? "Page captured" : "Demo trace"}
                   </div>
                 </div>
-                <div className="flex gap-1.5 font-mono text-[10px] text-[#8E8E98]">
-                  {["Hero", "Proof", "Action"].map((label, index) => (
+                <div className="flex max-w-[55%] gap-1.5 overflow-hidden font-mono text-[10px] text-[#8E8E98]">
+                  {visibleRoutes.map((route, index) => (
                     <span
-                      key={label}
+                      key={`${route.detail}-${index}`}
+                      title={route.detail}
                       className={`rounded-full border px-2 py-1 ${
-                        index === Math.floor(agent.progress / 24) % 3
+                        index === activeRouteIndex
                           ? "border-[#79F2A6]/45 bg-[#79F2A6]/12 text-[#C8FFD8]"
                           : "border-white/10 bg-black/20"
                       }`}
                     >
-                      {label}
+                      {route.label.slice(0, 18)}
                     </span>
                   ))}
                 </div>
@@ -178,10 +212,34 @@ export function AgentViewfinder({
                 <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/75 px-3 py-2 backdrop-blur">
                   <div className="truncate text-xs text-white">{visibleSurface}</div>
                   <div className="mt-1 font-mono text-[10px] text-[#8E8E98]">
-                    7 cursors testing layout, copy, trust, forms, and CTA paths
+                    7 independent cursors testing {visibleRoutes.length} routes,
+                    layout, copy, trust, forms, and CTA paths
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-2 lg:grid-cols-4">
+              {visibleRoutes.map((route, index) => (
+                <div
+                  key={`${route.detail}-trace`}
+                  className={`rounded-xl border px-3 py-2 ${
+                    index === activeRouteIndex
+                      ? "border-[#79F2A6]/40 bg-[#79F2A6]/10"
+                      : "border-white/10 bg-black/20"
+                  }`}
+                >
+                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                    route {index + 1}
+                  </div>
+                  <div className="mt-1 truncate text-sm text-white">
+                    {route.label}
+                  </div>
+                  <div className="mt-1 truncate font-mono text-[10px] text-[#8E8E98]">
+                    {route.detail}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1.6fr)_120px_120px]">

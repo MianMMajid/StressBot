@@ -9,6 +9,13 @@ export interface PageEvidence {
   buttons: string[];
   links: string[];
   forms: string[];
+  visitedPages?: Array<{
+    url: string;
+    title: string;
+    headings: string[];
+    buttons: string[];
+    forms: string[];
+  }>;
   visibleText: string;
   screenshot: string | null;
   consoleErrors: string[];
@@ -40,6 +47,7 @@ const FALLBACK_EVIDENCE: PageEvidence = {
   buttons: [],
   links: [],
   forms: [],
+  visitedPages: [],
   visibleText: "",
   screenshot: null,
   consoleErrors: [],
