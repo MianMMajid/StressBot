@@ -104,8 +104,8 @@ function IdeShell({
   ] as const;
 
   return (
-    <main className="ide-stage min-h-[100dvh] text-white">
-      <section className="ide-window flex min-h-[100dvh] flex-col overflow-hidden">
+    <main className="ide-stage h-[100dvh] overflow-hidden text-white">
+      <section className="ide-window flex h-full min-h-0 flex-col overflow-hidden">
         <header className="ide-titlebar flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
           <div className="flex min-w-0 items-center gap-3">
             <SimsAiBrand compact />
