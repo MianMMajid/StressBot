@@ -23,7 +23,6 @@ export function useSimulationEngine() {
   const [logLines, setLogLines] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [reportRevealKey, setReportRevealKey] = useState(0);
   const [selectedAgentId, setSelectedAgentId] = useState(PERSONA_AGENTS[0].id);
   const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -36,11 +35,6 @@ export function useSimulationEngine() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, []);
-
-  const openReport = useCallback(() => {
-    setDrawerOpen(true);
-    setReportRevealKey((k) => k + 1);
   }, []);
 
   const appendTelemetryBatch = useCallback((nextProgress: number) => {
@@ -111,12 +105,11 @@ export function useSimulationEngine() {
     clearLoop();
     setPhase((p) => {
       if (p === "RUNNING" || p === "PAUSED") {
-        queueMicrotask(openReport);
         return "STOPPED";
       }
       return p;
     });
-  }, [clearLoop, openReport]);
+  }, [clearLoop]);
 
   useEffect(() => {
     if (phase !== "RUNNING") {
@@ -140,7 +133,6 @@ export function useSimulationEngine() {
           intervalRef.current = null;
           queueMicrotask(() => {
             setPhase("COMPLETED");
-            openReport();
           });
         }
 
@@ -153,7 +145,7 @@ export function useSimulationEngine() {
       clearInterval(id);
       intervalRef.current = null;
     };
-  }, [phase, appendTelemetryBatch, clearLoop, openReport]);
+  }, [phase, appendTelemetryBatch, clearLoop]);
 
   const agentRuns = useMemo(
     () => PERSONA_AGENTS.map((agent) => getAgentRuntime(agent, progress)),
@@ -176,7 +168,7 @@ export function useSimulationEngine() {
     completedAgents,
     drawerOpen,
     setDrawerOpen,
-    reportRevealKey,
+    reportRevealKey: progress,
     analysis,
     analysisError,
     analyzingUrl,
