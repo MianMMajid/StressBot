@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSimulationEngine } from "@/hooks/useSimulationEngine";
 import { AgentViewfinder } from "@/components/AgentViewfinder";
 import { TelemetryTerminal } from "@/components/TelemetryTerminal";
@@ -17,7 +18,16 @@ const severityTone = {
   low: "border-[#444444] text-[#C8C8C8]",
 };
 
+const suggestedPrompts = [
+  "Find why first-time users do not understand our homepage.",
+  "Review pricing and tell me what blocks a budget owner.",
+  "Test this like an enterprise security buyer before signup.",
+];
+
 export function UserSimApp() {
+  const [chatPrompt, setChatPrompt] = useState(
+    "Run seven AI personas on my product and show the top UX, trust, pricing, accessibility, and onboarding issues."
+  );
   const {
     phase,
     targetUrl,
@@ -58,10 +68,20 @@ export function UserSimApp() {
     0
   );
 
+  const submitChatRun = () => {
+    const possibleUrl = chatPrompt.match(/https?:\/\/[^\s]+/)?.[0];
+    if (possibleUrl && phase !== "RUNNING") {
+      setTargetUrl(possibleUrl);
+    }
+    if (runEnabled) {
+      run();
+    }
+  };
+
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#000000] text-white">
-      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[#222222] bg-[#0A0A0A] px-4 py-3">
-        <div className="flex min-w-[180px] flex-col">
+    <div className="flex min-h-[100dvh] flex-col overflow-hidden bg-[#000000] text-white">
+      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[#222222] bg-[#0A0A0A] px-3 py-2 sm:px-4 sm:py-3">
+        <div className="flex min-w-[150px] flex-col">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#A0A0A0]">
             UserSim
           </span>
@@ -70,7 +90,7 @@ export function UserSimApp() {
           </span>
         </div>
 
-        <div className="flex min-w-[240px] flex-1 items-center gap-2">
+        <div className="flex min-w-[220px] flex-1 items-center gap-2">
           <label className="sr-only" htmlFor="target-url">
             Target URL
           </label>
@@ -92,11 +112,11 @@ export function UserSimApp() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={run}
+            onClick={submitChatRun}
             disabled={!runEnabled}
             className="border border-white bg-white px-4 py-2 font-mono text-[11px] font-medium uppercase tracking-wider text-black transition-colors hover:bg-[#EAEAEA] disabled:cursor-not-allowed disabled:opacity-30"
           >
-            Run Panel
+            Run
           </button>
           <button
             type="button"
@@ -135,8 +155,59 @@ export function UserSimApp() {
         </div>
       </header>
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[320px_1fr_380px]">
-        <aside className="flex min-h-[260px] flex-col border-b border-[#222222] bg-[#050505] xl:min-h-0 xl:border-b-0 xl:border-r">
+      <section className="shrink-0 border-b border-[#222222] bg-black px-3 py-3 sm:px-4">
+        <form
+          className="mx-auto grid max-w-6xl gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitChatRun();
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="mt-1 hidden h-7 w-7 shrink-0 border border-white bg-white text-center font-mono text-[10px] font-bold leading-7 text-black sm:block">
+              AI
+            </div>
+            <div className="min-w-0 flex-1 border border-[#333333] bg-[#0A0A0A]">
+              <div className="border-b border-[#222222] px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+                Ask the persona panel what to test
+              </div>
+              <textarea
+                value={chatPrompt}
+                onChange={(event) => setChatPrompt(event.target.value)}
+                disabled={phase === "RUNNING"}
+                rows={2}
+                className="block max-h-28 min-h-16 w-full resize-none bg-black px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-[#777777] disabled:opacity-60"
+                placeholder="Example: Test https://myapp.com like a skeptical buyer and accessibility reviewer."
+              />
+              <div className="flex flex-col gap-2 border-t border-[#222222] px-3 py-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 gap-2 overflow-x-auto pb-1 md:pb-0">
+                  {suggestedPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => setChatPrompt(prompt)}
+                      disabled={phase === "RUNNING"}
+                      className="shrink-0 border border-[#333333] bg-[#050505] px-2.5 py-1.5 text-left text-xs text-[#C8C8C8] hover:border-white hover:text-white disabled:opacity-50"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="submit"
+                  disabled={!runEnabled}
+                  className="shrink-0 border border-white bg-white px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  Run Persona Panel
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <main className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+        <aside className="flex min-h-[240px] flex-col border-b border-[#222222] bg-[#050505] lg:min-h-0 lg:border-b-0 lg:border-r">
           <div className="border-b border-[#222222] px-3 py-2">
             <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
               7 simultaneous agents
@@ -164,7 +235,7 @@ export function UserSimApp() {
               </div>
             </div>
           </div>
-          <div className="grid gap-2 overflow-y-auto p-3">
+          <div className="grid max-h-[330px] gap-2 overflow-y-auto p-3 lg:max-h-none">
             {agentRuns.map((agent) => (
               <button
                 key={agent.id}
@@ -262,7 +333,7 @@ export function UserSimApp() {
           </div>
         </aside>
 
-        <section className="flex min-h-[520px] flex-col border-b border-[#222222] xl:min-h-0 xl:border-b-0 xl:border-r">
+        <section className="flex min-h-[520px] flex-col border-b border-[#222222] lg:min-h-0 xl:border-b-0 xl:border-r">
           <div className="flex items-center justify-between gap-3 border-b border-[#222222] bg-[#0A0A0A] px-3 py-2">
             <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
               Agent viewfinder
@@ -283,7 +354,7 @@ export function UserSimApp() {
           </div>
         </section>
 
-        <aside className="flex min-h-[420px] flex-col bg-[#050505] xl:min-h-0">
+        <aside className="flex min-h-[420px] flex-col bg-[#050505] lg:col-span-2 xl:col-span-1 xl:min-h-0">
           <div className="border-b border-[#222222] bg-[#0A0A0A] px-3 py-2">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
@@ -300,7 +371,7 @@ export function UserSimApp() {
               </span>
             </div>
           </div>
-          <div className="grid gap-2 overflow-y-auto p-3">
+          <div className="grid max-h-[360px] gap-2 overflow-y-auto p-3 sm:grid-cols-2 xl:max-h-none xl:grid-cols-1">
             {EXAMPLE_FINDINGS.map((finding, index) => {
               const agent = agentRuns.find((a) => a.id === finding.agentId);
               if (!agent) return null;

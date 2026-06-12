@@ -47,13 +47,13 @@ export function AgentViewfinder({
 
   return (
     <div
-      className={`flex h-full min-h-[360px] flex-col border border-[#222222] bg-black ${
+      className={`flex h-full min-h-[340px] flex-col border border-[#222222] bg-black ${
         frozen ? "opacity-80" : ""
       }`}
     >
       <ChromeBar url={targetUrl} />
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="relative min-h-[300px] overflow-hidden border-b border-[#222222] bg-[#050505] p-4 lg:border-b-0 lg:border-r">
+        <div className="relative min-h-[300px] overflow-hidden border-b border-[#222222] bg-[#050505] p-3 sm:p-4 lg:border-b-0 lg:border-r">
           <div
             className={`pointer-events-none absolute inset-x-0 top-0 h-20 border-y border-white/20 bg-white/5 ${
               running ? "live-scanline" : ""
@@ -119,7 +119,7 @@ export function AgentViewfinder({
               </div>
             </div>
 
-            <div className="grid flex-1 grid-rows-[auto_1fr_auto] gap-4 p-4">
+            <div className="grid flex-1 grid-rows-[auto_1fr_auto] gap-4 p-3 sm:p-4">
               <div className="grid grid-cols-3 gap-2">
                 {["Hero", "Proof", "Action"].map((label, index) => (
                   <div
@@ -142,7 +142,7 @@ export function AgentViewfinder({
                 <div className="border border-[#222222] bg-black p-4 text-sm leading-6 text-white">
                   {agent.browserScene}
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div className="border border-[#222222] bg-black p-3">
                     <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
                       Friction
