@@ -1,26 +1,155 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #000000;
+  --panel: #0a0a0a;
+  --line: #222222;
+  --muted: #888888;
+  --fg: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes report-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-reveal {
+  animation: report-reveal 0.45s ease-out both;
+}
+
+.markdown-report {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #c8c8c8;
+}
+
+.markdown-report h1 {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #222222;
+}
+
+.markdown-report h2 {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.markdown-report h3 {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 1rem 0 0.5rem;
+}
+
+.markdown-report p {
+  margin: 0.5rem 0;
+}
+
+.markdown-report a {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.markdown-report hr {
+  border: none;
+  border-top: 1px solid #222222;
+  margin: 1.25rem 0;
+}
+
+.markdown-report ul {
+  margin: 0.5rem 0 0.5rem 1.1rem;
+  padding: 0;
+  list-style: square;
+}
+
+.markdown-report li {
+  margin: 0.25rem 0;
+}
+
+.markdown-report code {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 11px;
+  background: #0a0a0a;
+  border: 1px solid #222222;
+  padding: 0.1rem 0.35rem;
+  color: #ffffff;
+}
+
+.markdown-report pre {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 11px;
+  background: #0a0a0a;
+  border: 1px solid #222222;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  color: #c8c8c8;
+}
+
+.markdown-report pre code {
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.markdown-report table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 10px;
+  margin: 0.75rem 0;
+}
+
+.markdown-report th,
+.markdown-report td {
+  border: 1px solid #222222;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+}
+
+.markdown-report th {
+  background: #0a0a0a;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.markdown-report strong {
+  color: #ffffff;
+  font-weight: 600;
 }
