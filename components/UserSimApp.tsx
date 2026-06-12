@@ -23,9 +23,33 @@ const suggestedPrompts = [
 const runSteps = [
   "Opening page",
   "Capturing structure",
+  "Enriching context",
   "Reading copy",
   "Running personas",
   "Building report",
+];
+
+const demoSources = [
+  {
+    name: "Website",
+    status: "Live",
+    detail: "Playwright captures screenshot, DOM text, headings, buttons, forms.",
+  },
+  {
+    name: "X conversation",
+    status: "Demo",
+    detail: "Would sample recent posts mentioning the brand, category, or competitor terms.",
+  },
+  {
+    name: "Web search",
+    status: "Demo",
+    detail: "Would pull search snippets, reviews, docs, and category language.",
+  },
+  {
+    name: "Community",
+    status: "Demo",
+    detail: "Would summarize Reddit, forums, or support threads when API access is available.",
+  },
 ];
 
 const severityTone = {
@@ -68,6 +92,17 @@ function buildLiveReportMarkdown({
 - **Forms:** ${analysis.evidence.forms.slice(0, 8).join(" | ") || "none captured"}
 - **Console errors:** ${analysis.evidence.consoleErrors.length}
 - **Network errors:** ${analysis.evidence.networkErrors.length}
+
+---
+
+## Source Enrichment Preview
+
+${demoSources
+  .map(
+    (source) =>
+      `- **${source.name} (${source.status}):** ${source.detail}`
+  )
+  .join("\n")}
 
 ---
 
@@ -219,7 +254,8 @@ export function UserSimApp() {
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#B8B8BE]">
               Paste a public URL or localhost link. UserSim opens it locally,
-              captures the page, and returns focused product feedback.
+              captures the page, and shows how outside context could enrich the
+              persona panel.
             </p>
           </div>
 
@@ -243,7 +279,8 @@ export function UserSimApp() {
                   Target: {detectedUrl}
                 </span>
                 <span className="text-xs text-[#8F8F98]">
-                  Runs locally with Playwright. No deployment required.
+                  Website capture is live. X, web search, and community sources
+                  are shown as demo enrichers.
                 </span>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -339,6 +376,37 @@ export function UserSimApp() {
             </div>
           </section>
 
+          <section className="grid gap-3 md:grid-cols-4">
+            {demoSources.map((source, index) => {
+              const active =
+                source.status === "Live" ||
+                progress >= 22 + index * 12 ||
+                Boolean(analysis);
+              return (
+                <article
+                  key={source.name}
+                  className={`rounded-3xl border p-4 backdrop-blur ${
+                    active
+                      ? "border-white/20 bg-white/[0.06]"
+                      : "border-white/10 bg-white/[0.025]"
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h2 className="text-sm font-semibold text-white">
+                      {source.name}
+                    </h2>
+                    <span className="glass-pill px-2 py-1 font-mono text-[10px] uppercase text-[#D8D8DE]">
+                      {source.status}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-5 text-[#A8A8AF]">
+                    {source.detail}
+                  </p>
+                </article>
+              );
+            })}
+          </section>
+
           <section className="min-h-[520px]">
             <AgentViewfinder
               agent={selectedAgent}
@@ -395,6 +463,40 @@ export function UserSimApp() {
             </button>
           </div>
         </div>
+
+        <section className="glass-surface rounded-3xl p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Context sources</h2>
+              <p className="mt-1 text-sm text-[#A8A8AF]">
+                This demo uses the website live and shows how social/search/community data would plug into the same persona swarm.
+              </p>
+            </div>
+            <span className="glass-pill px-3 py-1.5 text-xs text-[#D8D8DE]">
+              Demo enrichment layer
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            {demoSources.map((source) => (
+              <article
+                key={source.name}
+                className="rounded-2xl border border-white/10 bg-black/30 p-3"
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-white">
+                    {source.name}
+                  </h3>
+                  <span className="font-mono text-[10px] uppercase text-[#A8A8AF]">
+                    {source.status}
+                  </span>
+                </div>
+                <p className="text-xs leading-5 text-[#B8B8BE]">
+                  {source.detail}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {findingCards.map((card) => {
