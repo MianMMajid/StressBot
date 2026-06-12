@@ -183,11 +183,37 @@ function IdeShell({
 }
 
 const severityTone = {
-  critical: "border-red-400/50 bg-red-950/25 text-red-100",
-  high: "border-orange-300/40 bg-orange-950/20 text-orange-100",
-  medium: "border-yellow-200/35 bg-yellow-950/15 text-yellow-100",
-  low: "border-white/10 bg-white/[0.04] text-[#D8D8D8]",
+  critical: {
+    card: "border-l-[#FF5C5C] bg-[linear-gradient(90deg,rgb(255_92_92_/_0.18),rgb(255_255_255_/_0.018)_34%,rgb(16_17_22_/_1))]",
+    badge: "border-[#FF5C5C]/55 bg-[#FF5C5C]/16 text-[#FFD6D6]",
+    dot: "bg-[#FF5C5C] shadow-[0_0_18px_rgb(255_92_92_/_0.55)]",
+    meter: "from-[#FF5C5C] to-[#FFB3B3]",
+    label: "Critical",
+  },
+  high: {
+    card: "border-l-[#FF9F43] bg-[linear-gradient(90deg,rgb(255_159_67_/_0.16),rgb(255_255_255_/_0.018)_34%,rgb(16_17_22_/_1))]",
+    badge: "border-[#FF9F43]/55 bg-[#FF9F43]/15 text-[#FFE0BC]",
+    dot: "bg-[#FF9F43] shadow-[0_0_18px_rgb(255_159_67_/_0.5)]",
+    meter: "from-[#FF9F43] to-[#FFD28A]",
+    label: "High",
+  },
+  medium: {
+    card: "border-l-[#FFD166] bg-[linear-gradient(90deg,rgb(255_209_102_/_0.13),rgb(255_255_255_/_0.018)_34%,rgb(16_17_22_/_1))]",
+    badge: "border-[#FFD166]/55 bg-[#FFD166]/14 text-[#FFF0BC]",
+    dot: "bg-[#FFD166] shadow-[0_0_16px_rgb(255_209_102_/_0.45)]",
+    meter: "from-[#FFD166] to-[#FFF1A8]",
+    label: "Medium",
+  },
+  low: {
+    card: "border-l-[#7DB7FF] bg-[linear-gradient(90deg,rgb(125_183_255_/_0.11),rgb(255_255_255_/_0.018)_34%,rgb(16_17_22_/_1))]",
+    badge: "border-[#7DB7FF]/45 bg-[#7DB7FF]/12 text-[#DCEAFF]",
+    dot: "bg-[#7DB7FF] shadow-[0_0_14px_rgb(125_183_255_/_0.4)]",
+    meter: "from-[#7DB7FF] to-[#BFD8FF]",
+    label: "Low",
+  },
 };
+
+const severityOrder = ["critical", "high", "medium", "low"] as const;
 
 function extractUrlFromPrompt(prompt: string) {
   const tokens = prompt.match(
@@ -855,23 +881,62 @@ export function UserSimApp() {
 
         <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-3">
+            <div className="grid gap-2 sm:grid-cols-4">
+              {severityOrder.map((severity) => {
+                const tone = severityTone[severity];
+                const count = findingCards.filter(
+                  (card) => card?.severity === severity
+                ).length;
+                return (
+                  <div
+                    key={severity}
+                    className={`rounded-2xl border px-3 py-3 ${tone.badge}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em]">
+                          {tone.label}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xl font-semibold">
+                        {count}
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-black/25">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${tone.meter}`}
+                        style={{
+                          width: `${Math.max(10, (count / Math.max(1, findingCards.length)) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             {findingCards.map((card, index) => {
               if (!card) return null;
+              const tone = severityTone[card.severity];
               return (
                 <article
                   key={card.id}
-                  className={`ide-issue border-l-2 ${severityTone[card.severity]}`}
+                  className={`ide-issue border-l-4 ${tone.card}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
-                        issue {String(index + 1).padStart(2, "0")} / {card.agent.name}
+                      <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                        <span>issue {String(index + 1).padStart(2, "0")}</span>
+                        <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+                        <span>{card.agent.name}</span>
                       </div>
                       <h2 className="mt-2 text-base font-semibold leading-6 text-white">
                         {card.title}
                       </h2>
                     </div>
-                    <span className="ide-badge">{card.severity}</span>
+                    <span className={`ide-badge ${tone.badge}`}>
+                      {tone.label}
+                    </span>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-[#D8D8DE]">
                     {card.recommendation}
@@ -879,9 +944,19 @@ export function UserSimApp() {
                   <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-3 font-mono text-[11px] leading-5 text-[#A8A8AF]">
                     {card.evidence}
                   </div>
-                  <div className="mt-3 text-xs text-[#8F8F98]">
-                    {card.confidence}% confidence /{" "}
-                    {card.isLive ? "real page finding" : "demo fallback"}
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-[180px] flex-1">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${tone.meter}`}
+                          style={{ width: `${Math.max(8, card.confidence)}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#8F8F98]">
+                      {card.confidence}% confidence /{" "}
+                      {card.isLive ? "real page" : "demo fallback"}
+                    </div>
                   </div>
                 </article>
               );
@@ -896,21 +971,39 @@ export function UserSimApp() {
               </div>
             </div>
             <div className="grid max-h-[540px] gap-2 overflow-y-auto p-3">
-              {agentRuns.map((agent) => (
-                <button
-                  key={agent.id}
-                  type="button"
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  className={`rounded-xl border p-3 text-left ${
-                    selectedAgentId === agent.id
-                      ? "border-[#79F2A6]/45 bg-[#79F2A6]/12"
-                      : "border-white/10 bg-white/[0.025]"
-                  }`}
-                >
-                  <div className="text-sm font-semibold text-white">{agent.name}</div>
-                  <div className="mt-1 text-xs text-[#A8A8AF]">{agent.title}</div>
-                </button>
-              ))}
+              {agentRuns.map((agent) => {
+                const liveSeverity =
+                  analysisFindingByAgent.get(agent.id)?.severity ?? agent.severity;
+                const tone = severityTone[liveSeverity];
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => setSelectedAgentId(agent.id)}
+                    className={`rounded-xl border p-3 text-left transition ${
+                      selectedAgentId === agent.id
+                        ? `${tone.badge} shadow-[0_12px_30px_rgb(0_0_0_/_0.22)]`
+                        : "border-white/10 bg-white/[0.025] hover:border-white/20"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 text-sm font-semibold text-white">
+                        {agent.name}
+                      </div>
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${tone.dot}`} />
+                    </div>
+                    <div className="mt-1 text-xs text-[#A8A8AF]">{agent.title}</div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className={`ide-badge px-2 py-1 ${tone.badge}`}>
+                        {tone.label}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#8E8E98]">
+                        {agent.confidence}%
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </aside>
         </section>
