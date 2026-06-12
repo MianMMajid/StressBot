@@ -13,7 +13,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StressBot - AI persona stress testing",
+  title: "SimsAi - AI persona stress testing",
   description:
     "Local demo of AI personas stress-testing product pages and websites.",
 };

@@ -21,7 +21,7 @@ export function TelemetryTerminal({
     <div className="h-full min-h-0 flex-1 overflow-y-auto bg-black p-3 font-mono text-[10px] leading-relaxed text-[#C8C8C8]">
       <div className="mb-2 flex items-center justify-between border-b border-[#222222] pb-2 text-[#888888]">
         <span>
-          <span className="text-white">stressbot</span>@telemetry · session_
+          <span className="text-white">simsai</span>@telemetry · session_
           {lines.length.toString(16).padStart(4, "0")}
         </span>
         <span className="flex items-center gap-2 uppercase tracking-widest">
@@ -38,7 +38,7 @@ export function TelemetryTerminal({
         {lines.length === 0 ? (
           <li className="text-[#777777]">
             <span className="select-none text-[#888888]">0000</span>{" "}
-            Waiting for StressBot review...
+            Waiting for SimsAi review...
           </li>
         ) : null}
         {lines.map((line, i) => (

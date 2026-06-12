@@ -52,6 +52,34 @@ const demoSources = [
   },
 ];
 
+function SimsAiBrand({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={`flex items-center ${compact ? "gap-2" : "justify-center gap-3"}`}
+      aria-label="SimsAi"
+    >
+      <div
+        className={`${compact ? "h-9 w-9" : "h-12 w-12"} simsai-gem relative shrink-0`}
+        aria-hidden="true"
+      >
+        <span className="absolute left-1/2 top-[18%] h-[24%] w-[36%] -translate-x-1/2 rounded-full bg-white/45 blur-[3px]" />
+      </div>
+      <div className={compact ? "text-left" : "text-left"}>
+        <div
+          className={`${compact ? "text-xl" : "text-3xl sm:text-4xl"} simsai-wordmark font-semibold tracking-normal`}
+        >
+          SimsAi
+        </div>
+        {!compact ? (
+          <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[#9BFFB8]">
+            Persona lab
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 const severityTone = {
   critical: "border-red-400/50 bg-red-950/25 text-red-100",
   high: "border-orange-300/40 bg-orange-950/20 text-orange-100",
@@ -76,7 +104,7 @@ function buildLiveReportMarkdown({
   outcome: "COMPLETED" | "STOPPED";
   analysis: NonNullable<ReturnType<typeof useSimulationEngine>["analysis"]>;
 }) {
-  return `# StressBot Live Page Report
+  return `# SimsAi Live Page Report
 
 **Requested URL:** \`${targetUrl}\`  
 **Captured URL:** \`${analysis.evidence.finalUrl}\`  
@@ -243,44 +271,56 @@ export function UserSimApp() {
 
   if (screen === "chat") {
     return (
-      <main className="flex min-h-[100dvh] items-center justify-center bg-[#050506] px-4 py-8 text-white">
+      <main className="simsai-stage flex min-h-[100dvh] items-center justify-center px-4 py-8 text-white">
         <section className="w-full max-w-3xl">
           <div className="mb-8 text-center">
-            <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[#9B9BA1]">
-              StressBot
-            </div>
-            <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-              Ask seven AI personas to review any product page.
+            <SimsAiBrand />
+            <h1 className="mt-7 text-4xl font-semibold tracking-normal sm:text-5xl">
+              Get a quick read from seven AI personas.
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#B8B8BE]">
-              Paste a public URL or localhost link. StressBot opens it locally,
-              captures the page, and shows how outside context could enrich the
-              persona panel.
+              Paste a link and SimsAi turns the page into clear product,
+              trust, accessibility, and buying feedback.
             </p>
           </div>
 
           <form
-            className="glass-surface overflow-hidden rounded-[28px]"
+            className="glass-surface simsai-chat-shell overflow-hidden rounded-[32px]"
             onSubmit={(event) => {
               event.preventDefault();
               submitChatRun();
             }}
           >
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="simsai-gem h-8 w-8 shrink-0" aria-hidden="true" />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-white">
+                    What should the personas review?
+                  </div>
+                  <div className="truncate text-xs text-[#9FA0A8]">
+                    Works with public URLs and localhost demos.
+                  </div>
+                </div>
+              </div>
+              <span className="glass-pill hidden px-3 py-1.5 text-xs text-[#DDFCE8] sm:inline-flex">
+                7 agents
+              </span>
+            </div>
             <textarea
               value={chatPrompt}
               onChange={(event) => setChatPrompt(event.target.value)}
               rows={5}
-              className="block max-h-52 min-h-40 w-full resize-none bg-[#0B0B0C] px-5 py-5 text-[16px] leading-7 text-white outline-none placeholder:text-[#77777F]"
-              placeholder="Example: Test example.com like a skeptical buyer and accessibility reviewer."
+              className="block max-h-52 min-h-40 w-full resize-none bg-transparent px-5 py-5 text-[16px] leading-7 text-white outline-none placeholder:text-[#77777F]"
+              placeholder="Paste a URL and say what kind of feedback you want."
             />
             <div className="border-t border-white/10 px-4 py-4">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="glass-pill px-3 py-1.5 text-xs text-[#D8D8DC]">
-                  Target: {detectedUrl}
+                <span className="glass-pill px-3 py-1.5 text-xs text-[#DDFCE8]">
+                  Reviewing: {detectedUrl}
                 </span>
                 <span className="text-xs text-[#8F8F98]">
-                  Website capture is live. X, web search, and community sources
-                  are shown as demo enrichers.
+                  Live website capture with demo source enrichment.
                 </span>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -305,6 +345,11 @@ export function UserSimApp() {
               </div>
             </div>
           </form>
+          <div className="mt-5 grid gap-2 text-center text-xs text-[#9A9AA2] sm:grid-cols-3">
+            <div className="glass-pill px-3 py-2">No setup needed</div>
+            <div className="glass-pill px-3 py-2">Reads the live page</div>
+            <div className="glass-pill px-3 py-2">Plain-English report</div>
+          </div>
         </section>
       </main>
     );
@@ -312,13 +357,12 @@ export function UserSimApp() {
 
   if (screen === "process") {
     return (
-      <main className="min-h-[100dvh] bg-[#050506] px-4 py-6 text-white">
+      <main className="simsai-stage min-h-[100dvh] px-4 py-6 text-white">
         <section className="mx-auto grid max-w-5xl gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#9B9BA1]">
-                StressBot
-              </div>
+            <div className="flex items-center gap-3">
+              <SimsAiBrand compact />
+              <div className="h-10 w-px bg-white/10" />
               <h1 className="mt-1 text-2xl font-semibold">
                 Reviewing {detectedUrl}
               </h1>
@@ -345,7 +389,7 @@ export function UserSimApp() {
             </div>
           </div>
 
-          <section className="border border-white/10 bg-[#111113] px-5 py-5">
+          <section className="glass-surface rounded-[28px] px-5 py-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-medium">
@@ -423,10 +467,13 @@ export function UserSimApp() {
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#050506] px-4 py-6 text-white">
+      <main className="simsai-stage min-h-[100dvh] px-4 py-6 text-white">
       <section className="mx-auto grid max-w-6xl gap-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
+            <div className="mb-4">
+              <SimsAiBrand compact />
+            </div>
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#9B9BA1]">
               Final report
             </div>
