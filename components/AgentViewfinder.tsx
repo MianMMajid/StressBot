@@ -7,13 +7,13 @@ import type { AgentRuntime, SimulationPhase } from "@/lib/simulation";
 function ChromeBar({ url }: { url: string }) {
   const display = url.replace(/^https?:\/\//, "").slice(0, 58);
   return (
-    <div className="flex items-center gap-2 border-b border-[#222222] bg-[#0A0A0A] px-2 py-1.5">
+    <div className="flex items-center gap-2 border-b border-white/10 bg-[#111113] px-2 py-1.5">
       <div className="flex gap-1" aria-hidden>
-        <span className="h-2 w-2 border border-[#333333] bg-[#191919]" />
-        <span className="h-2 w-2 border border-[#333333] bg-[#191919]" />
-        <span className="h-2 w-2 border border-[#333333] bg-[#191919]" />
+        <span className="h-2 w-2 border border-white/10 bg-[#2A2A2D]" />
+        <span className="h-2 w-2 border border-white/10 bg-[#2A2A2D]" />
+        <span className="h-2 w-2 border border-white/10 bg-[#2A2A2D]" />
       </div>
-      <div className="min-w-0 flex-1 truncate border border-[#222222] bg-black px-2 py-0.5 font-mono text-[9px] text-[#A0A0A0]">
+      <div className="min-w-0 flex-1 truncate border border-white/10 bg-black/60 px-2 py-0.5 font-mono text-[9px] text-[#B8B8BE]">
         {display}
       </div>
     </div>
@@ -22,7 +22,7 @@ function ChromeBar({ url }: { url: string }) {
 
 function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-1.5 w-full border border-[#222222] bg-black">
+    <div className="h-1.5 w-full bg-white/10">
       <div
         className="h-full bg-white transition-[width] duration-300"
         style={{ width: `${value}%` }}
@@ -61,13 +61,13 @@ export function AgentViewfinder({
 
   return (
     <div
-      className={`flex h-full min-h-[340px] flex-col border border-[#222222] bg-black ${
+      className={`flex h-full min-h-[340px] flex-col border border-white/10 bg-[#101012] ${
         frozen ? "opacity-80" : ""
       }`}
     >
       <ChromeBar url={targetUrl} />
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="relative min-h-[300px] overflow-hidden border-b border-[#222222] bg-[#050505] p-3 sm:p-4 lg:border-b-0 lg:border-r">
+        <div className="relative min-h-[300px] overflow-hidden border-b border-white/10 bg-[#0B0B0C] p-3 sm:p-4 lg:border-b-0 lg:border-r">
           <div
             className={`pointer-events-none absolute inset-x-0 top-0 h-20 border-y border-white/20 bg-white/5 ${
               running ? "live-scanline" : ""
@@ -84,7 +84,7 @@ export function AgentViewfinder({
             aria-hidden
           />
 
-          <div className="mb-4 flex items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+          <div className="mb-4 flex items-center justify-between gap-3 text-xs text-[#A8A8AF]">
             <span className="flex items-center gap-2">
               <span
                 className={`h-1.5 w-1.5 bg-white ${
@@ -99,7 +99,7 @@ export function AgentViewfinder({
             </span>
           </div>
 
-          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden border border-[#222222] bg-[#0A0A0A]">
+          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden border border-white/10 bg-[#141416] shadow-xl shadow-black/30">
             <div
               className={`pointer-events-none absolute h-20 w-20 border border-white/70 ${
                 running ? "live-drift" : ""
@@ -117,14 +117,14 @@ export function AgentViewfinder({
               style={{ left: `${secondaryLeft}%`, top: `${secondaryTop}%` }}
               aria-hidden
             />
-            <div className="border-b border-[#222222] px-4 py-3">
+            <div className="border-b border-white/10 px-4 py-3">
               <div className="mb-2 flex items-center gap-2">
                 <div className="h-3 w-36 bg-white" />
-                <div className="font-mono text-[9px] uppercase text-[#A0A0A0]">
+                <div className="font-mono text-[9px] uppercase text-[#A8A8AF]">
                   {analyzing ? "capturing DOM" : evidence ? "page captured" : "demo trace"}
                 </div>
               </div>
-              <div className="h-2 w-64 max-w-full overflow-hidden bg-[#333333]">
+              <div className="h-2 w-64 max-w-full overflow-hidden bg-white/10">
                 <div
                   className={`h-full w-1/3 bg-white/60 ${
                     running ? "animate-pulse" : ""
@@ -141,7 +141,7 @@ export function AgentViewfinder({
                     className={`border px-2 py-2 font-mono text-[9px] uppercase ${
                       index === Math.floor(agent.progress / 24) % 3
                         ? "border-white bg-white text-black"
-                        : "border-[#222222] bg-black text-[#A0A0A0]"
+                        : "border-white/10 bg-black/50 text-[#A8A8AF]"
                     }`}
                   >
                     {label}
@@ -150,11 +150,11 @@ export function AgentViewfinder({
               </div>
 
               <div className="flex flex-col justify-center gap-3">
-                <div className="font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+                <div className="text-xs text-[#A8A8AF]">
                   Current surface - agent trace
                 </div>
                 {evidence?.screenshot ? (
-                  <div className="relative max-h-48 overflow-hidden border border-[#222222] bg-black">
+                  <div className="relative max-h-48 overflow-hidden border border-white/10 bg-black">
                     <Image
                       src={evidence.screenshot}
                       alt={`Screenshot captured from ${evidence.finalUrl}`}
@@ -168,19 +168,19 @@ export function AgentViewfinder({
                     </div>
                   </div>
                 ) : (
-                  <div className="border border-[#222222] bg-black p-4 text-sm leading-6 text-white">
+                  <div className="border border-white/10 bg-black/50 p-4 text-sm leading-6 text-white">
                     {visibleSurface}
                   </div>
                 )}
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <div className="border border-[#222222] bg-black p-3">
-                    <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
+                  <div className="border border-white/10 bg-black/40 p-3">
+                    <div className="mb-1 text-xs text-[#A8A8AF]">
                       Friction
                     </div>
                     <div className="text-sm text-white">{visibleSignal}</div>
                   </div>
-                  <div className="border border-[#222222] bg-black p-3">
-                    <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
+                  <div className="border border-white/10 bg-black/40 p-3">
+                    <div className="mb-1 text-xs text-[#A8A8AF]">
                       Evidence
                     </div>
                     <div className="font-mono text-xl text-white">
@@ -189,8 +189,8 @@ export function AgentViewfinder({
                         : Math.max(1, Math.round(agent.progress / 13))}
                     </div>
                   </div>
-                  <div className="border border-[#222222] bg-black p-3">
-                    <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
+                  <div className="border border-white/10 bg-black/40 p-3">
+                    <div className="mb-1 text-xs text-[#A8A8AF]">
                       Confidence
                     </div>
                     <div className="font-mono text-xl text-white">
@@ -201,7 +201,7 @@ export function AgentViewfinder({
               </div>
 
               <div>
-                <div className="mb-2 flex justify-between font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                <div className="mb-2 flex justify-between font-mono text-[9px] uppercase tracking-widest text-[#A8A8AF]">
                   <span>{agent.status}</span>
                   <span>{agent.progress}%</span>
                 </div>
@@ -211,9 +211,9 @@ export function AgentViewfinder({
           </div>
         </div>
 
-        <aside className="flex min-h-0 flex-col gap-4 bg-[#0A0A0A] p-4">
+        <aside className="flex min-h-0 flex-col gap-3 bg-[#111113] p-4">
           <div>
-            <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+            <div className="mb-1 text-xs text-[#A8A8AF]">
               Active persona
             </div>
             <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
@@ -226,15 +226,15 @@ export function AgentViewfinder({
             <p className="mt-1 text-sm text-[#C8C8C8]">{agent.title}</p>
           </div>
 
-          <div className="border border-[#222222] bg-black p-3">
-            <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+          <div className="border border-white/10 bg-black/40 p-3">
+            <div className="mb-2 text-xs text-[#A8A8AF]">
               Persona
             </div>
             <p className="text-sm leading-6 text-[#D8D8D8]">{agent.persona}</p>
           </div>
 
-          <div className="border border-[#222222] bg-black p-3">
-            <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+          <div className="border border-white/10 bg-black/40 p-3">
+            <div className="mb-2 text-xs text-[#A8A8AF]">
               Think-aloud
             </div>
             <blockquote className="text-sm leading-6 text-white">
@@ -242,8 +242,8 @@ export function AgentViewfinder({
             </blockquote>
           </div>
 
-          <div className="border border-[#222222] bg-black p-3">
-            <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+          <div className="border border-white/10 bg-black/40 p-3">
+            <div className="mb-2 text-xs text-[#A8A8AF]">
               Recommended fix
             </div>
             <p className="text-sm leading-6 text-[#D8D8D8]">
@@ -252,8 +252,8 @@ export function AgentViewfinder({
           </div>
 
           {finding ? (
-            <div className="border border-[#222222] bg-black p-3">
-              <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+            <div className="border border-white/10 bg-black/40 p-3">
+              <div className="mb-2 text-xs text-[#A8A8AF]">
                 Page evidence
               </div>
               <p className="text-sm leading-6 text-[#D8D8D8]">
