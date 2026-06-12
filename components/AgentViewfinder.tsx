@@ -50,6 +50,7 @@ function AgentCursors({
         return (
           <div
             key={persona.id}
+            data-agent-cursor={persona.id}
             className={`agent-cursor ${cursorVariants[index]} ${
               running ? "agent-cursor-live" : ""
             }`}
