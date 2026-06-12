@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import type { PageEvidence, PersonaFinding } from "@/lib/page-analysis";
 import type { AgentRuntime, SimulationPhase } from "@/lib/simulation";
 
 function ChromeBar({ url }: { url: string }) {
@@ -31,10 +33,16 @@ function ProgressBar({ value }: { value: number }) {
 
 export function AgentViewfinder({
   agent,
+  finding,
+  evidence,
+  analyzing,
   phase,
   targetUrl,
 }: {
   agent: AgentRuntime;
+  finding?: PersonaFinding;
+  evidence: PageEvidence | null;
+  analyzing: boolean;
   phase: SimulationPhase;
   targetUrl: string;
 }) {
@@ -44,6 +52,12 @@ export function AgentViewfinder({
   const hotspotTop = 24 + ((agent.progress * 5) % 42);
   const secondaryLeft = 70 - ((agent.progress * 3) % 44);
   const secondaryTop = 66 - ((agent.progress * 4) % 36);
+  const visibleSignal = finding?.signal ?? agent.signal;
+  const visibleQuote = finding?.quote ?? agent.quote;
+  const visibleRecommendation = finding?.recommendation ?? agent.recommendation;
+  const visibleConfidence = finding?.confidence ?? agent.confidence;
+  const visibleSurface =
+    evidence?.title || evidence?.description || agent.browserScene;
 
   return (
     <div
@@ -107,7 +121,7 @@ export function AgentViewfinder({
               <div className="mb-2 flex items-center gap-2">
                 <div className="h-3 w-36 bg-white" />
                 <div className="font-mono text-[9px] uppercase text-[#A0A0A0]">
-                  capturing DOM
+                  {analyzing ? "capturing DOM" : evidence ? "page captured" : "demo trace"}
                 </div>
               </div>
               <div className="h-2 w-64 max-w-full overflow-hidden bg-[#333333]">
@@ -139,22 +153,40 @@ export function AgentViewfinder({
                 <div className="font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
                   Current surface - agent trace
                 </div>
-                <div className="border border-[#222222] bg-black p-4 text-sm leading-6 text-white">
-                  {agent.browserScene}
-                </div>
+                {evidence?.screenshot ? (
+                  <div className="relative max-h-48 overflow-hidden border border-[#222222] bg-black">
+                    <Image
+                      src={evidence.screenshot}
+                      alt={`Screenshot captured from ${evidence.finalUrl}`}
+                      width={900}
+                      height={540}
+                      unoptimized
+                      className="h-full w-full object-cover object-top opacity-80"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-black/80 px-3 py-2 text-xs text-white">
+                      {visibleSurface}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-[#222222] bg-black p-4 text-sm leading-6 text-white">
+                    {visibleSurface}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div className="border border-[#222222] bg-black p-3">
                     <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
                       Friction
                     </div>
-                    <div className="text-sm text-white">{agent.signal}</div>
+                    <div className="text-sm text-white">{visibleSignal}</div>
                   </div>
                   <div className="border border-[#222222] bg-black p-3">
                     <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
                       Evidence
                     </div>
                     <div className="font-mono text-xl text-white">
-                      {Math.max(1, Math.round(agent.progress / 13))}
+                      {evidence
+                        ? evidence.headings.length + evidence.buttons.length
+                        : Math.max(1, Math.round(agent.progress / 13))}
                     </div>
                   </div>
                   <div className="border border-[#222222] bg-black p-3">
@@ -162,7 +194,7 @@ export function AgentViewfinder({
                       Confidence
                     </div>
                     <div className="font-mono text-xl text-white">
-                      {agent.confidence}%
+                      {visibleConfidence}%
                     </div>
                   </div>
                 </div>
@@ -206,7 +238,7 @@ export function AgentViewfinder({
               Think-aloud
             </div>
             <blockquote className="text-sm leading-6 text-white">
-              &quot;{agent.quote}&quot;
+              &quot;{visibleQuote}&quot;
             </blockquote>
           </div>
 
@@ -215,9 +247,20 @@ export function AgentViewfinder({
               Recommended fix
             </div>
             <p className="text-sm leading-6 text-[#D8D8D8]">
-              {agent.recommendation}
+              {visibleRecommendation}
             </p>
           </div>
+
+          {finding ? (
+            <div className="border border-[#222222] bg-black p-3">
+              <div className="mb-2 font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                Page evidence
+              </div>
+              <p className="text-sm leading-6 text-[#D8D8D8]">
+                {finding.evidence}
+              </p>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

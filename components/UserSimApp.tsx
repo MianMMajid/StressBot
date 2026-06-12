@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { PersonaFinding } from "@/lib/page-analysis";
 import { useSimulationEngine } from "@/hooks/useSimulationEngine";
 import { AgentViewfinder } from "@/components/AgentViewfinder";
 import { TelemetryTerminal } from "@/components/TelemetryTerminal";
@@ -24,6 +25,60 @@ const suggestedPrompts = [
   "Test this like an enterprise security buyer before signup.",
 ];
 
+function buildLiveReportMarkdown({
+  targetUrl,
+  outcome,
+  analysis,
+}: {
+  targetUrl: string;
+  outcome: "COMPLETED" | "STOPPED";
+  analysis: NonNullable<ReturnType<typeof useSimulationEngine>["analysis"]>;
+}) {
+  return `# UserSim Live Page Report
+
+**Requested URL:** \`${targetUrl}\`  
+**Captured URL:** \`${analysis.evidence.finalUrl}\`  
+**Outcome:** ${outcome}  
+**Page title:** ${analysis.evidence.title || "Untitled page"}
+
+---
+
+## Captured Surface
+
+- **Headings:** ${analysis.evidence.headings.slice(0, 8).join(" | ") || "none captured"}
+- **Buttons:** ${analysis.evidence.buttons.slice(0, 8).join(" | ") || "none captured"}
+- **Forms:** ${analysis.evidence.forms.slice(0, 8).join(" | ") || "none captured"}
+- **Console errors:** ${analysis.evidence.consoleErrors.length}
+- **Network errors:** ${analysis.evidence.networkErrors.length}
+
+---
+
+## Persona Findings
+
+${analysis.findings
+  .map((finding, index) => {
+    const agent = PERSONA_AGENTS.find((item) => item.id === finding.agentId);
+    return `### ${index + 1}. ${agent?.name ?? finding.agentId} - ${
+      agent?.title ?? "Persona agent"
+    }
+
+**Signal:** ${finding.signal}  
+**Evidence:** ${finding.evidence}  
+**Quote:** "${finding.quote}"  
+**Recommendation:** ${finding.recommendation}  
+**Severity:** ${finding.severity.toUpperCase()} | **Confidence:** ${
+      finding.confidence
+    }%
+`;
+  })
+  .join("\n")}
+
+---
+
+*Generated locally from a Playwright page inspection.*
+`;
+}
+
 export function UserSimApp() {
   const [chatPrompt, setChatPrompt] = useState(
     "Run seven AI personas on my product and show the top UX, trust, pricing, accessibility, and onboarding issues."
@@ -38,6 +93,9 @@ export function UserSimApp() {
     drawerOpen,
     setDrawerOpen,
     reportRevealKey,
+    analysis,
+    analysisError,
+    analyzingUrl,
     selectedAgent,
     selectedAgentId,
     setSelectedAgentId,
@@ -47,11 +105,18 @@ export function UserSimApp() {
     stop,
   } = useSimulationEngine();
 
-  const reportMd = buildBugReportMarkdown({
-    targetUrl,
-    outcome: phase === "COMPLETED" ? "COMPLETED" : "STOPPED",
-    progress,
-  });
+  const reportOutcome = phase === "COMPLETED" ? "COMPLETED" : "STOPPED";
+  const reportMd = analysis
+    ? buildLiveReportMarkdown({
+        targetUrl,
+        outcome: reportOutcome,
+        analysis,
+      })
+    : buildBugReportMarkdown({
+        targetUrl,
+        outcome: reportOutcome,
+        progress,
+      });
 
   const runEnabled =
     phase === "IDLE" ||
@@ -67,6 +132,10 @@ export function UserSimApp() {
     (total, agent) => total + Math.max(0, Math.round(agent.progress / 18)),
     0
   );
+  const analysisFindingByAgent = new Map(
+    analysis?.findings.map((finding) => [finding.agentId, finding]) ?? []
+  );
+  const selectedFinding = analysisFindingByAgent.get(selectedAgentId);
 
   const submitChatRun = () => {
     const possibleUrl = chatPrompt.match(/https?:\/\/[^\s]+/)?.[0];
@@ -74,7 +143,7 @@ export function UserSimApp() {
       setTargetUrl(possibleUrl);
     }
     if (runEnabled) {
-      run();
+      run(possibleUrl ?? targetUrl);
     }
   };
 
@@ -180,18 +249,29 @@ export function UserSimApp() {
                 placeholder="Example: Test https://myapp.com like a skeptical buyer and accessibility reviewer."
               />
               <div className="flex flex-col gap-2 border-t border-[#222222] px-3 py-2 md:flex-row md:items-center md:justify-between">
-                <div className="flex min-w-0 gap-2 overflow-x-auto pb-1 md:pb-0">
-                  {suggestedPrompts.map((prompt) => (
-                    <button
-                      key={prompt}
-                      type="button"
-                      onClick={() => setChatPrompt(prompt)}
-                      disabled={phase === "RUNNING"}
-                      className="shrink-0 border border-[#333333] bg-[#050505] px-2.5 py-1.5 text-left text-xs text-[#C8C8C8] hover:border-white hover:text-white disabled:opacity-50"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 gap-2 overflow-x-auto pb-1 md:pb-0">
+                    {suggestedPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        onClick={() => setChatPrompt(prompt)}
+                        disabled={phase === "RUNNING"}
+                        className="shrink-0 border border-[#333333] bg-[#050505] px-2.5 py-1.5 text-left text-xs text-[#C8C8C8] hover:border-white hover:text-white disabled:opacity-50"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+                    {analyzingUrl
+                      ? "Opening URL locally with Playwright..."
+                      : analysis
+                        ? `Captured ${analysis.evidence.title || analysis.evidence.finalUrl}`
+                        : analysisError
+                          ? `Inspection issue: ${analysisError}`
+                          : "Paste any public URL or localhost link to inspect real page content."}
+                  </div>
                 </div>
                 <button
                   type="submit"
@@ -348,6 +428,9 @@ export function UserSimApp() {
           <div className="min-h-0 flex-1 p-3">
             <AgentViewfinder
               agent={selectedAgent}
+              finding={selectedFinding}
+              evidence={analysis?.evidence ?? null}
+              analyzing={analyzingUrl}
               phase={phase}
               targetUrl={targetUrl}
             />
@@ -376,6 +459,11 @@ export function UserSimApp() {
               const agent = agentRuns.find((a) => a.id === finding.agentId);
               if (!agent) return null;
               const findingUnlocked = agent.progress > 42;
+              const liveFinding = analysisFindingByAgent.get(
+                finding.agentId
+              ) as PersonaFinding | undefined;
+              const title = liveFinding?.signal ?? finding.title;
+              const fix = liveFinding?.recommendation ?? finding.fix;
               return (
                 <button
                   key={finding.id}
@@ -408,15 +496,21 @@ export function UserSimApp() {
                       findingUnlocked ? "text-white" : "text-[#777777]"
                     }`}
                   >
-                    {finding.title}
+                    {title}
                   </div>
                   <p className="text-xs leading-5 text-[#C8C8C8]">
                     {findingUnlocked
-                      ? finding.fix
+                      ? fix
                       : "Agent is still gathering evidence from the product surface."}
                   </p>
                   <div className="mt-3 flex items-center justify-between font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
-                    <span>{findingUnlocked ? "finding ready" : "collecting"}</span>
+                    <span>
+                      {liveFinding
+                        ? "real page finding"
+                        : findingUnlocked
+                          ? "demo finding ready"
+                          : "collecting"}
+                    </span>
                     <span>{Math.min(100, Math.max(0, agent.progress))}%</span>
                   </div>
                 </button>
