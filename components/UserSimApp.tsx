@@ -50,6 +50,13 @@ export function UserSimApp() {
     phase === "STOPPED";
   const pauseEnabled = phase === "RUNNING";
   const stopEnabled = phase === "RUNNING" || phase === "PAUSED";
+  const activeAgents = agentRuns.filter(
+    (agent) => agent.status === "scanning" || agent.status === "reasoning"
+  ).length;
+  const evidenceCount = agentRuns.reduce(
+    (total, agent) => total + Math.max(0, Math.round(agent.progress / 18)),
+    0
+  );
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#000000] text-white">
@@ -110,7 +117,15 @@ export function UserSimApp() {
         </div>
 
         <div className="ml-auto flex items-center gap-3 font-mono text-[10px] text-[#A0A0A0]">
-          <span className="hidden lg:inline">PARALLEL RUN</span>
+          <span className="hidden items-center gap-2 lg:flex">
+            <span
+              className={`h-1.5 w-1.5 bg-white ${
+                phase === "RUNNING" ? "live-signal" : ""
+              }`}
+              aria-hidden
+            />
+            PARALLEL RUN
+          </span>
           <span className="border border-[#333333] px-2 py-1 text-white">
             {phase}
           </span>
@@ -127,21 +142,62 @@ export function UserSimApp() {
               7 simultaneous agents
             </h2>
           </div>
+          <div className="grid grid-cols-3 border-b border-[#222222] bg-black">
+            <div className="border-r border-[#222222] px-3 py-2">
+              <div className="font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                Active
+              </div>
+              <div className="font-mono text-lg text-white">{activeAgents}</div>
+            </div>
+            <div className="border-r border-[#222222] px-3 py-2">
+              <div className="font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                Evidence
+              </div>
+              <div className="font-mono text-lg text-white">{evidenceCount}</div>
+            </div>
+            <div className="px-3 py-2">
+              <div className="font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                Findings
+              </div>
+              <div className="font-mono text-lg text-white">
+                {EXAMPLE_FINDINGS.length}
+              </div>
+            </div>
+          </div>
           <div className="grid gap-2 overflow-y-auto p-3">
             {agentRuns.map((agent) => (
               <button
                 key={agent.id}
                 type="button"
                 onClick={() => setSelectedAgentId(agent.id)}
-                className={`border p-3 text-left transition-colors ${
+                className={`relative overflow-hidden border p-3 text-left transition-colors ${
                   selectedAgentId === agent.id
                     ? "border-white bg-white text-black"
                     : "border-[#222222] bg-black text-white hover:border-[#666666]"
                 }`}
               >
+                {agent.status !== "queued" && agent.status !== "complete" ? (
+                  <span
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white live-flicker"
+                    aria-hidden
+                  />
+                ) : null}
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-semibold">{agent.name}</div>
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <span
+                        className={`h-1.5 w-1.5 ${
+                          selectedAgentId === agent.id ? "bg-black" : "bg-white"
+                        } ${
+                          agent.status === "scanning" ||
+                          agent.status === "reasoning"
+                            ? "live-signal"
+                            : ""
+                        }`}
+                        aria-hidden
+                      />
+                      {agent.name}
+                    </div>
                     <div
                       className={`font-mono text-[9px] uppercase tracking-widest ${
                         selectedAgentId === agent.id
@@ -167,6 +223,27 @@ export function UserSimApp() {
                   <span>{agent.progress}%</span>
                 </div>
                 <div
+                  className={`mb-2 grid grid-cols-7 gap-1 ${
+                    selectedAgentId === agent.id ? "opacity-70" : "opacity-100"
+                  }`}
+                  aria-hidden
+                >
+                  {Array.from({ length: 7 }).map((_, index) => (
+                    <span
+                      key={index}
+                      className={`h-1 ${
+                        agent.progress / 100 > index / 7
+                          ? selectedAgentId === agent.id
+                            ? "bg-black"
+                            : "bg-white"
+                          : selectedAgentId === agent.id
+                            ? "bg-black/20"
+                            : "bg-[#222222]"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div
                   className={`h-1.5 border ${
                     selectedAgentId === agent.id
                       ? "border-black bg-black/10"
@@ -190,9 +267,12 @@ export function UserSimApp() {
             <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
               Agent viewfinder
             </h2>
-            <span className="font-mono text-[10px] text-[#A0A0A0]">
-              {progress}% panel progress
-            </span>
+            <div className="flex items-center gap-3 font-mono text-[10px] text-[#A0A0A0]">
+              <span>{progress}% panel progress</span>
+              <span className="hidden border border-[#333333] px-2 py-0.5 text-white sm:inline">
+                {activeAgents} live
+              </span>
+            </div>
           </div>
           <div className="min-h-0 flex-1 p-3">
             <AgentViewfinder
@@ -205,39 +285,69 @@ export function UserSimApp() {
 
         <aside className="flex min-h-[420px] flex-col bg-[#050505] xl:min-h-0">
           <div className="border-b border-[#222222] bg-[#0A0A0A] px-3 py-2">
-            <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
-              Six demo findings
-            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#A0A0A0]">
+                Six demo findings
+              </h2>
+              <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
+                <span
+                  className={`h-1.5 w-1.5 bg-white ${
+                    phase === "RUNNING" ? "live-signal" : ""
+                  }`}
+                  aria-hidden
+                />
+                synthesizing
+              </span>
+            </div>
           </div>
           <div className="grid gap-2 overflow-y-auto p-3">
             {EXAMPLE_FINDINGS.map((finding, index) => {
               const agent = agentRuns.find((a) => a.id === finding.agentId);
               if (!agent) return null;
+              const findingUnlocked = agent.progress > 42;
               return (
                 <button
                   key={finding.id}
                   type="button"
                   onClick={() => setSelectedAgentId(agent.id)}
-                  className={`border p-3 text-left ${
+                  className={`relative overflow-hidden border p-3 text-left ${
                     selectedAgentId === agent.id
                       ? "border-white bg-[#101010]"
                       : "border-[#222222] bg-black hover:border-[#666666]"
                   }`}
                 >
+                  {findingUnlocked ? (
+                    <span
+                      className="pointer-events-none absolute inset-y-0 left-0 w-px bg-white live-flicker"
+                      aria-hidden
+                    />
+                  ) : null}
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
                       Example {index + 1}
                     </span>
-                    <span className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase ${severityTone[agent.severity]}`}>
+                    <span
+                      className={`border px-1.5 py-0.5 font-mono text-[9px] uppercase ${severityTone[agent.severity]}`}
+                    >
                       {agent.shorthand}
                     </span>
                   </div>
-                  <div className="mb-2 text-sm font-semibold text-white">
+                  <div
+                    className={`mb-2 text-sm font-semibold ${
+                      findingUnlocked ? "text-white" : "text-[#777777]"
+                    }`}
+                  >
                     {finding.title}
                   </div>
                   <p className="text-xs leading-5 text-[#C8C8C8]">
-                    {finding.fix}
+                    {findingUnlocked
+                      ? finding.fix
+                      : "Agent is still gathering evidence from the product surface."}
                   </p>
+                  <div className="mt-3 flex items-center justify-between font-mono text-[9px] uppercase tracking-widest text-[#A0A0A0]">
+                    <span>{findingUnlocked ? "finding ready" : "collecting"}</span>
+                    <span>{Math.min(100, Math.max(0, agent.progress))}%</span>
+                  </div>
                 </button>
               );
             })}

@@ -35,6 +35,63 @@ body {
   }
 }
 
+.live-scanline {
+  animation: live-scanline 1.8s linear infinite;
+}
+
+.live-signal {
+  animation: live-signal 1.2s ease-in-out infinite;
+}
+
+.live-flicker {
+  animation: live-flicker 2.4s steps(4, end) infinite;
+}
+
+.live-drift {
+  animation: live-drift 5s ease-in-out infinite;
+}
+
+@keyframes live-scanline {
+  from {
+    transform: translateY(-18%);
+  }
+  to {
+    transform: translateY(118%);
+  }
+}
+
+@keyframes live-signal {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes live-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes live-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(8px, -6px, 0);
+  }
+}
+
 .report-reveal {
   animation: report-reveal 0.45s ease-out both;
 }

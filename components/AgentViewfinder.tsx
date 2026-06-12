@@ -40,6 +40,10 @@ export function AgentViewfinder({
 }) {
   const frozen = phase === "PAUSED";
   const running = phase === "RUNNING";
+  const hotspotLeft = 18 + ((agent.progress * 7) % 58);
+  const hotspotTop = 24 + ((agent.progress * 5) % 42);
+  const secondaryLeft = 70 - ((agent.progress * 3) % 44);
+  const secondaryTop = 66 - ((agent.progress * 4) % 36);
 
   return (
     <div
@@ -51,21 +55,68 @@ export function AgentViewfinder({
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
         <div className="relative min-h-[300px] overflow-hidden border-b border-[#222222] bg-[#050505] p-4 lg:border-b-0 lg:border-r">
           <div
-            className={`absolute inset-x-0 top-0 h-px bg-white/80 ${
-              running ? "animate-pulse" : ""
+            className={`pointer-events-none absolute inset-x-0 top-0 h-20 border-y border-white/20 bg-white/5 ${
+              running ? "live-scanline" : ""
             }`}
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
             aria-hidden
           />
 
           <div className="mb-4 flex items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
-            <span>live browser inspection</span>
-            <span className="text-white">{agent.productStage}</span>
+            <span className="flex items-center gap-2">
+              <span
+                className={`h-1.5 w-1.5 bg-white ${
+                  running ? "live-signal" : ""
+                }`}
+                aria-hidden
+              />
+              live browser inspection
+            </span>
+            <span className={running ? "live-flicker text-white" : "text-white"}>
+              {agent.productStage}
+            </span>
           </div>
 
-          <div className="mx-auto flex h-full max-w-xl flex-col border border-[#222222] bg-[#0A0A0A]">
+          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden border border-[#222222] bg-[#0A0A0A]">
+            <div
+              className={`pointer-events-none absolute h-20 w-20 border border-white/70 ${
+                running ? "live-drift" : ""
+              }`}
+              style={{ left: `${hotspotLeft}%`, top: `${hotspotTop}%` }}
+              aria-hidden
+            >
+              <span className="absolute -left-1 -top-1 h-2 w-2 bg-white" />
+              <span className="absolute -right-1 -top-1 h-2 w-2 bg-white" />
+              <span className="absolute -bottom-1 -left-1 h-2 w-2 bg-white" />
+              <span className="absolute -bottom-1 -right-1 h-2 w-2 bg-white" />
+            </div>
+            <div
+              className="pointer-events-none absolute h-3 w-3 border border-white bg-black"
+              style={{ left: `${secondaryLeft}%`, top: `${secondaryTop}%` }}
+              aria-hidden
+            />
             <div className="border-b border-[#222222] px-4 py-3">
-              <div className="mb-2 h-3 w-36 bg-white" />
-              <div className="h-2 w-64 max-w-full bg-[#333333]" />
+              <div className="mb-2 flex items-center gap-2">
+                <div className="h-3 w-36 bg-white" />
+                <div className="font-mono text-[9px] uppercase text-[#A0A0A0]">
+                  capturing DOM
+                </div>
+              </div>
+              <div className="h-2 w-64 max-w-full overflow-hidden bg-[#333333]">
+                <div
+                  className={`h-full w-1/3 bg-white/60 ${
+                    running ? "animate-pulse" : ""
+                  }`}
+                />
+              </div>
             </div>
 
             <div className="grid flex-1 grid-rows-[auto_1fr_auto] gap-4 p-4">
@@ -74,7 +125,7 @@ export function AgentViewfinder({
                   <div
                     key={label}
                     className={`border px-2 py-2 font-mono text-[9px] uppercase ${
-                      index === agent.progress % 3
+                      index === Math.floor(agent.progress / 24) % 3
                         ? "border-white bg-white text-black"
                         : "border-[#222222] bg-black text-[#A0A0A0]"
                     }`}
@@ -86,17 +137,25 @@ export function AgentViewfinder({
 
               <div className="flex flex-col justify-center gap-3">
                 <div className="font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
-                  Current surface
+                  Current surface - agent trace
                 </div>
                 <div className="border border-[#222222] bg-black p-4 text-sm leading-6 text-white">
                   {agent.browserScene}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <div className="border border-[#222222] bg-black p-3">
                     <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
                       Friction
                     </div>
                     <div className="text-sm text-white">{agent.signal}</div>
+                  </div>
+                  <div className="border border-[#222222] bg-black p-3">
+                    <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
+                      Evidence
+                    </div>
+                    <div className="font-mono text-xl text-white">
+                      {Math.max(1, Math.round(agent.progress / 13))}
+                    </div>
                   </div>
                   <div className="border border-[#222222] bg-black p-3">
                     <div className="mb-1 font-mono text-[9px] uppercase text-[#A0A0A0]">
@@ -125,7 +184,13 @@ export function AgentViewfinder({
             <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-[#A0A0A0]">
               Active persona
             </div>
-            <h3 className="text-xl font-semibold text-white">{agent.name}</h3>
+            <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
+              <span
+                className={`h-2 w-2 bg-white ${running ? "live-signal" : ""}`}
+                aria-hidden
+              />
+              {agent.name}
+            </h3>
             <p className="mt-1 text-sm text-[#C8C8C8]">{agent.title}</p>
           </div>
 
