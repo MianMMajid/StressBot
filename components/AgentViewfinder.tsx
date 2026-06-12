@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import type { PageEvidence, PersonaFinding } from "@/lib/page-analysis";
-import type { AgentRuntime, SimulationPhase } from "@/lib/simulation";
+import {
+  PERSONA_AGENTS,
+  type AgentRuntime,
+  type SimulationPhase,
+} from "@/lib/simulation";
 
 function ChromeBar({ url }: { url: string }) {
   const display = url.replace(/^https?:\/\//, "").slice(0, 58);
@@ -20,13 +24,33 @@ function ChromeBar({ url }: { url: string }) {
   );
 }
 
-function ProgressBar({ value }: { value: number }) {
+function AgentCursors({
+  progress,
+  running,
+}: {
+  progress: number;
+  running: boolean;
+}) {
   return (
-    <div className="h-1.5 w-full bg-white/10">
-      <div
-        className="h-full bg-white transition-[width] duration-300"
-        style={{ width: `${value}%` }}
-      />
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+      {PERSONA_AGENTS.map((persona, index) => {
+        const left = 10 + ((progress * (index + 2) + index * 13) % 76);
+        const top = 14 + ((progress * (index + 3) + index * 9) % 64);
+
+        return (
+          <div
+            key={persona.id}
+            className={`agent-cursor ${running ? "agent-cursor-live" : ""}`}
+            style={{
+              left: `${left}%`,
+              top: `${top}%`,
+              animationDelay: `${index * 130}ms`,
+            }}
+          >
+            <span className="agent-cursor-label">{persona.name.split(" ")[0]}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -50,8 +74,6 @@ export function AgentViewfinder({
   const running = phase === "RUNNING";
   const hotspotLeft = 18 + ((agent.progress * 7) % 58);
   const hotspotTop = 24 + ((agent.progress * 5) % 42);
-  const secondaryLeft = 70 - ((agent.progress * 3) % 44);
-  const secondaryTop = 66 - ((agent.progress * 4) % 36);
   const visibleSignal = finding?.signal ?? agent.signal;
   const visibleQuote = finding?.quote ?? agent.quote;
   const visibleRecommendation = finding?.recommendation ?? agent.recommendation;
@@ -61,13 +83,13 @@ export function AgentViewfinder({
 
   return (
     <div
-      className={`glass-surface flex h-full min-h-[340px] flex-col overflow-hidden rounded-3xl ${
+      className={`ide-panel flex h-full min-h-[560px] flex-col overflow-hidden rounded-[16px] ${
         frozen ? "opacity-80" : ""
       }`}
     >
       <ChromeBar url={targetUrl} />
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="relative min-h-[300px] overflow-hidden border-b border-white/10 bg-[#0B0B0C] p-3 sm:p-4 lg:border-b-0 lg:border-r">
+      <div className="min-h-0 flex-1">
+        <div className="relative h-full min-h-[540px] overflow-hidden bg-[#08090D] p-3">
           <div
             className={`pointer-events-none absolute inset-x-0 top-0 h-20 border-y border-white/20 bg-white/5 ${
               running ? "live-scanline" : ""
@@ -87,181 +109,145 @@ export function AgentViewfinder({
           <div className="mb-4 flex items-center justify-between gap-3 text-xs text-[#A8A8AF]">
             <span className="flex items-center gap-2">
               <span
-                className={`h-1.5 w-1.5 bg-white ${
+                className={`h-1.5 w-1.5 rounded-full bg-[#79F2A6] ${
                   running ? "live-signal" : ""
                 }`}
                 aria-hidden
               />
-              live browser inspection
+              live multi-agent inspection
             </span>
             <span className={running ? "live-flicker text-white" : "text-white"}>
               {agent.productStage}
             </span>
           </div>
 
-          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#141416]/90 shadow-xl shadow-black/30 backdrop-blur">
-            <div
-              className={`pointer-events-none absolute h-20 w-20 border border-white/70 ${
-                running ? "live-drift" : ""
-              }`}
-              style={{ left: `${hotspotLeft}%`, top: `${hotspotTop}%` }}
-              aria-hidden
-            >
-              <span className="absolute -left-1 -top-1 h-2 w-2 bg-white" />
-              <span className="absolute -right-1 -top-1 h-2 w-2 bg-white" />
-              <span className="absolute -bottom-1 -left-1 h-2 w-2 bg-white" />
-              <span className="absolute -bottom-1 -right-1 h-2 w-2 bg-white" />
-            </div>
-            <div
-              className="pointer-events-none absolute h-3 w-3 border border-white bg-black"
-              style={{ left: `${secondaryLeft}%`, top: `${secondaryTop}%` }}
-              aria-hidden
-            />
-            <div className="border-b border-white/10 px-4 py-3">
-              <div className="mb-2 flex items-center gap-2">
-                <div className="h-3 w-36 bg-white" />
-                <div className="font-mono text-[9px] uppercase text-[#A8A8AF]">
-                  {analyzing ? "capturing DOM" : evidence ? "page captured" : "demo trace"}
-                </div>
-              </div>
-              <div className="h-2 w-64 max-w-full overflow-hidden bg-white/10">
-                <div
-                  className={`h-full w-1/3 bg-white/60 ${
-                    running ? "animate-pulse" : ""
-                  }`}
-                />
-              </div>
-            </div>
-
-            <div className="grid flex-1 grid-rows-[auto_1fr_auto] gap-4 p-3 sm:p-4">
-              <div className="grid grid-cols-3 gap-2">
-                {["Hero", "Proof", "Action"].map((label, index) => (
-                  <div
-                    key={label}
-                    className={`rounded-full border px-2 py-2 text-center font-mono text-[9px] uppercase ${
-                      index === Math.floor(agent.progress / 24) % 3
-                        ? "border-white bg-white text-black"
-                        : "border-white/10 bg-black/50 text-[#A8A8AF]"
-                    }`}
-                  >
-                    {label}
+          <div className="grid h-[calc(100%-2.25rem)] min-h-[490px] grid-rows-[minmax(0,1fr)_auto_auto] gap-3">
+            <div className="relative min-h-0 overflow-hidden rounded-[14px] border border-white/10 bg-[#101116] shadow-2xl shadow-black/35">
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-[#15161B] px-3 py-2">
+                <div className="min-w-0">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#79F2A6]">
+                    viewport.preview
                   </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col justify-center gap-3">
-                <div className="text-xs text-[#A8A8AF]">
-                  Current surface - agent trace
+                  <div className="mt-0.5 truncate text-xs text-[#A8A8AF]">
+                    {analyzing ? "Capturing DOM and screenshot" : evidence ? "Page captured" : "Demo trace"}
+                  </div>
                 </div>
+                <div className="flex gap-1.5 font-mono text-[10px] text-[#8E8E98]">
+                  {["Hero", "Proof", "Action"].map((label, index) => (
+                    <span
+                      key={label}
+                      className={`rounded-full border px-2 py-1 ${
+                        index === Math.floor(agent.progress / 24) % 3
+                          ? "border-[#79F2A6]/45 bg-[#79F2A6]/12 text-[#C8FFD8]"
+                          : "border-white/10 bg-black/20"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="relative h-[calc(100%-49px)] min-h-[330px] bg-black">
                 {evidence?.screenshot ? (
-                  <div className="relative max-h-48 overflow-hidden rounded-2xl border border-white/10 bg-black">
-                    <Image
-                      src={evidence.screenshot}
-                      alt={`Screenshot captured from ${evidence.finalUrl}`}
-                      width={900}
-                      height={540}
-                      unoptimized
-                      className="h-full w-full object-cover object-top opacity-80"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-black/80 px-3 py-2 text-xs text-white">
-                      {visibleSurface}
-                    </div>
-                  </div>
+                  <Image
+                    src={evidence.screenshot}
+                    alt={`Screenshot captured from ${evidence.finalUrl}`}
+                    width={1365}
+                    height={900}
+                    unoptimized
+                    className="h-full w-full object-contain object-top opacity-90"
+                  />
                 ) : (
-                  <div className="rounded-2xl border border-white/10 bg-black/50 p-4 text-sm leading-6 text-white">
+                  <div className="grid h-full place-items-center p-6 text-center text-sm leading-6 text-white">
                     {visibleSurface}
                   </div>
                 )}
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-                    <div className="mb-1 text-xs text-[#A8A8AF]">
-                      Friction
-                    </div>
-                    <div className="text-sm text-white">{visibleSignal}</div>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-                    <div className="mb-1 text-xs text-[#A8A8AF]">
-                      Evidence
-                    </div>
-                    <div className="font-mono text-xl text-white">
-                      {evidence
-                        ? evidence.headings.length + evidence.buttons.length
-                        : Math.max(1, Math.round(agent.progress / 13))}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-                    <div className="mb-1 text-xs text-[#A8A8AF]">
-                      Confidence
-                    </div>
-                    <div className="font-mono text-xl text-white">
-                      {visibleConfidence}%
-                    </div>
+                <AgentCursors progress={agent.progress} running={running} />
+                <div
+                  className={`pointer-events-none absolute h-24 w-28 border border-[#79F2A6]/80 bg-[#79F2A6]/8 ${
+                    running ? "live-drift" : ""
+                  }`}
+                  style={{ left: `${hotspotLeft}%`, top: `${hotspotTop}%` }}
+                  aria-hidden
+                >
+                  <span className="absolute -left-1 -top-1 h-2 w-2 bg-[#79F2A6]" />
+                  <span className="absolute -right-1 -top-1 h-2 w-2 bg-[#79F2A6]" />
+                  <span className="absolute -bottom-1 -left-1 h-2 w-2 bg-[#79F2A6]" />
+                  <span className="absolute -bottom-1 -right-1 h-2 w-2 bg-[#79F2A6]" />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 border-t border-white/10 bg-black/75 px-3 py-2 backdrop-blur">
+                  <div className="truncate text-xs text-white">{visibleSurface}</div>
+                  <div className="mt-1 font-mono text-[10px] text-[#8E8E98]">
+                    7 cursors testing layout, copy, trust, forms, and CTA paths
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <div className="mb-2 flex justify-between font-mono text-[9px] uppercase tracking-widest text-[#A8A8AF]">
-                  <span>{agent.status}</span>
-                  <span>{agent.progress}%</span>
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1.6fr)_120px_120px]">
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  current friction
                 </div>
-                <ProgressBar value={agent.progress} />
+                <div className="max-h-16 overflow-hidden text-sm leading-5 text-white">
+                  {visibleSignal}
+                </div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  evidence
+                </div>
+                <div className="font-mono text-2xl text-white">
+                  {evidence
+                    ? evidence.headings.length + evidence.buttons.length
+                    : Math.max(1, Math.round(agent.progress / 13))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  confidence
+                </div>
+                <div className="font-mono text-2xl text-white">
+                  {visibleConfidence}%
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-2 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  active persona
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-base font-semibold text-white">
+                  <span
+                    className={`h-2 w-2 rounded-full bg-[#79F2A6] ${
+                      running ? "live-signal" : ""
+                    }`}
+                    aria-hidden
+                  />
+                  {agent.name}
+                </div>
+                <div className="mt-1 text-xs text-[#A8A8AF]">{agent.title}</div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  think-aloud
+                </div>
+                <blockquote className="mt-2 max-h-16 overflow-hidden text-sm leading-5 text-[#D8D8DE]">
+                  &quot;{visibleQuote}&quot;
+                </blockquote>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                  recommended fix
+                </div>
+                <p className="mt-2 max-h-16 overflow-hidden text-sm leading-5 text-[#D8D8DE]">
+                  {visibleRecommendation}
+                </p>
               </div>
             </div>
           </div>
         </div>
-
-        <aside className="flex min-h-0 flex-col gap-3 bg-[#111113] p-4">
-          <div>
-            <div className="mb-1 text-xs text-[#A8A8AF]">
-              Active persona
-            </div>
-            <h3 className="flex items-center gap-2 text-xl font-semibold text-white">
-              <span
-                className={`h-2 w-2 bg-white ${running ? "live-signal" : ""}`}
-                aria-hidden
-              />
-              {agent.name}
-            </h3>
-            <p className="mt-1 text-sm text-[#C8C8C8]">{agent.title}</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-            <div className="mb-2 text-xs text-[#A8A8AF]">
-              Persona
-            </div>
-            <p className="text-sm leading-6 text-[#D8D8D8]">{agent.persona}</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-            <div className="mb-2 text-xs text-[#A8A8AF]">
-              Think-aloud
-            </div>
-            <blockquote className="text-sm leading-6 text-white">
-              &quot;{visibleQuote}&quot;
-            </blockquote>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-            <div className="mb-2 text-xs text-[#A8A8AF]">
-              Recommended fix
-            </div>
-            <p className="text-sm leading-6 text-[#D8D8D8]">
-              {visibleRecommendation}
-            </p>
-          </div>
-
-          {finding ? (
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
-              <div className="mb-2 text-xs text-[#A8A8AF]">
-                Page evidence
-              </div>
-              <p className="text-sm leading-6 text-[#D8D8D8]">
-                {finding.evidence}
-              </p>
-            </div>
-          ) : null}
-        </aside>
       </div>
     </div>
   );
