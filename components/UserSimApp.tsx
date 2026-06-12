@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { PersonaFinding } from "@/lib/page-analysis";
 import { useSimulationEngine } from "@/hooks/useSimulationEngine";
@@ -96,12 +96,17 @@ function IdeShell({
   progress: number;
   children: ReactNode;
 }) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const rail = [
     { id: "review", label: "Review", mark: "R" },
     { id: "agents", label: "Agents", mark: "A" },
     { id: "sources", label: "Sources", mark: "S" },
     { id: "report", label: "Report", mark: "F" },
   ] as const;
+
+  useLayoutEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [active]);
 
   return (
     <main className="ide-stage h-[100dvh] overflow-hidden text-white">
@@ -167,7 +172,10 @@ function IdeShell({
                 </div>
               ))}
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto bg-[#0B0C10]">
+            <div
+              ref={contentRef}
+              className="min-h-0 flex-1 overflow-y-auto bg-[#0B0C10]"
+            >
               {children}
             </div>
           </div>
