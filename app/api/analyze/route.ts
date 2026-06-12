@@ -58,6 +58,13 @@ export async function POST(request: Request) {
       consoleErrors,
       networkErrors,
     });
+    if (evidence.authChallenge?.detected) {
+      return Response.json({
+        requiresLogin: true,
+        loginUrl: evidence.finalUrl,
+        reason: evidence.authChallenge.reason,
+      });
+    }
     return Response.json(analyzeEvidence(evidence));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown browser error";

@@ -104,8 +104,8 @@ function IdeShell({
   ] as const;
 
   return (
-    <main className="ide-stage min-h-[100dvh] p-3 text-white sm:p-5">
-      <section className="ide-window mx-auto flex min-h-[calc(100dvh-1.5rem)] max-w-7xl flex-col overflow-hidden rounded-[18px] sm:min-h-[calc(100dvh-2.5rem)]">
+    <main className="ide-stage min-h-[100dvh] text-white">
+      <section className="ide-window flex min-h-[100dvh] flex-col overflow-hidden">
         <header className="ide-titlebar flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
           <div className="flex min-w-0 items-center gap-3">
             <SimsAiBrand compact />
@@ -191,10 +191,11 @@ const severityTone = {
 
 function extractUrlFromPrompt(prompt: string) {
   const tokens = prompt.match(
-    /\b(?:https?:\/\/)?(?:localhost(?::\d+)?|(?:[\w-]+\.)+[a-z]{2,})(?:\/[^\s]*)?/i
+    /\b(?:https?:\/\/)?(?:localhost(?::\d+)?|127\.0\.0\.1(?::\d+)?|\[::1\](?::\d+)?|(?:[\w-]+\.)+[a-z]{2,})(?:\/[^\s]*)?/gi
   );
-  if (!tokens?.[0]) return null;
-  return tokens[0].replace(/[),.;!?]+$/, "");
+  const latestToken = tokens?.at(-1);
+  if (!latestToken) return null;
+  return latestToken.replace(/[),.;!?]+$/, "");
 }
 
 function buildLiveReportMarkdown({
@@ -291,6 +292,8 @@ export function UserSimApp() {
     analysisError,
     analyzingUrl,
     manualLoginWaiting,
+    manualLoginSessionId,
+    manualLoginReason,
     selectedAgent,
     selectedAgentId,
     setSelectedAgentId,
@@ -406,23 +409,50 @@ export function UserSimApp() {
         subtitle="Command palette / product-feedback agent"
         progress={0}
       >
-        <section className="flex min-h-full items-center justify-center px-4 py-8">
-          <div className="w-full max-w-4xl">
-            <div className="mb-5">
-              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#79F2A6]">
-                SimsAi Composer
+        <section className="grid min-h-full grid-rows-[auto_1fr]">
+          <div className="border-b border-white/10 bg-[#101116] px-4 py-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#79F2A6]">
+                  SimsAi Composer
+                </div>
+                <h1 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-3xl">
+                  Review any product page like it is open in an IDE.
+                </h1>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-[#A7A7B0]">
+                  Paste a URL, add persona instructions, and SimsAi runs seven
+                  synthetic users across the live surface, same-site routes, and
+                  authenticated pages when login is enabled.
+                </p>
               </div>
-              <h1 className="mt-3 text-3xl font-semibold tracking-normal text-white sm:text-5xl">
-                Review any product page like it is open in an IDE.
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#A7A7B0] sm:text-base">
-                Paste a URL, add persona instructions, and SimsAi runs seven
-                synthetic users against the live surface.
-              </p>
+              <div className="grid min-w-[280px] grid-cols-3 gap-2">
+                <div className="ide-panel p-3">
+                  <div className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                    agents
+                  </div>
+                  <div className="mt-1 text-xl font-semibold">7</div>
+                </div>
+                <div className="ide-panel p-3">
+                  <div className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                    mode
+                  </div>
+                  <div className="mt-1 truncate text-sm text-white">
+                    {manualLoginEnabled ? "Auth" : "Public"}
+                  </div>
+                </div>
+                <div className="ide-panel p-3">
+                  <div className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                    routes
+                  </div>
+                  <div className="mt-1 text-xl font-semibold">4</div>
+                </div>
+              </div>
             </div>
+          </div>
 
+          <div className="grid min-h-0 gap-4 p-4 xl:grid-cols-[minmax(0,1.25fr)_360px]">
             <form
-              className="ide-command-panel overflow-hidden rounded-[18px]"
+              className="ide-command-panel self-start overflow-hidden rounded-[18px]"
               onSubmit={(event) => {
                 event.preventDefault();
                 submitChatRun();
@@ -514,15 +544,63 @@ export function UserSimApp() {
               </div>
             </form>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              {["Live browser capture", "Persona context graph", "Findings as issues"].map(
-                (item) => (
-                  <div key={item} className="ide-mini-card">
-                    {item}
+            <aside className="grid gap-4">
+              <section className="ide-panel p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-white">
+                      Workspace readiness
+                    </h2>
+                    <p className="mt-1 text-xs leading-5 text-[#9A9AA4]">
+                      Everything visible here participates in the demo.
+                    </p>
                   </div>
-                )
-              )}
-            </div>
+                  <span className="ide-badge">ready</span>
+                </div>
+                <div className="grid gap-2">
+                  {[
+                    "Live browser capture",
+                    "Manual login handoff",
+                    "Same-site route crawl",
+                    "Findings as issues",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm"
+                    >
+                      <span>{item}</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#79F2A6]" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="ide-panel p-4">
+                <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-[#8E8E98]">
+                  persona queue
+                </div>
+                <div className="grid gap-2">
+                  {PERSONA_AGENTS.slice(0, 7).map((persona) => (
+                    <div
+                      key={persona.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium text-white">
+                          {persona.name}
+                        </div>
+                        <div className="truncate text-xs text-[#8E8E98]">
+                          {persona.title}
+                        </div>
+                      </div>
+                      <span className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                        queued
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </aside>
           </div>
         </section>
       </IdeShell>
@@ -545,25 +623,34 @@ export function UserSimApp() {
                   {analysis
                     ? `Captured ${analysis.evidence.title || analysis.evidence.finalUrl}`
                     : manualLoginWaiting
-                      ? "Manual login browser is open"
+                      ? manualLoginSessionId
+                        ? "Login detected - browser is waiting"
+                        : "Login detected - opening browser"
                     : analysisError
                       ? `Inspection issue: ${analysisError}`
                       : "Opening page locally"}
                 </div>
                 <div className="mt-1 font-mono text-[11px] text-[#8E8E98]">
                   {manualLoginWaiting
-                    ? "Log in in the browser window, then continue capture"
+                    ? manualLoginReason ??
+                      "Log in in the browser window, then continue capture"
                     : `${completedAgents}/${PERSONA_AGENTS.length} complete / ${activeAgents} active / ${progress}%`}
                 </div>
+                {manualLoginWaiting && analysisError ? (
+                  <div className="mt-2 rounded-xl border border-[#FFCF70]/30 bg-[#FFCF70]/10 px-3 py-2 text-xs text-[#FFE5AD]">
+                    {analysisError}
+                  </div>
+                ) : null}
               </div>
               <div className="flex gap-2">
                 {manualLoginWaiting ? (
                   <button
                     type="button"
                     onClick={continueManualLogin}
+                    disabled={!manualLoginSessionId}
                     className="glass-button glass-button-primary px-3 py-2 text-sm font-semibold"
                   >
-                    Continue after login
+                    {manualLoginSessionId ? "Continue after login" : "Opening browser..."}
                   </button>
                 ) : null}
                 <button
@@ -716,7 +803,7 @@ export function UserSimApp() {
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 pb-4">
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#79F2A6]">
-              findings.md
+              final report / findings.md
             </div>
             <h1 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-4xl">
               {analysis?.evidence.title || "Persona review complete"}

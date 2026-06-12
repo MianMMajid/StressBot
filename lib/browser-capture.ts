@@ -33,6 +33,70 @@ export function compact(items: string[]) {
   ).slice(0, 28);
 }
 
+function detectAuthChallenge({
+  finalUrl,
+  title,
+  headings,
+  buttons,
+  forms,
+  visibleText,
+  passwordFieldCount,
+}: {
+  finalUrl: string;
+  title: string;
+  headings: string[];
+  buttons: string[];
+  forms: string[];
+  visibleText: string;
+  passwordFieldCount: number;
+}) {
+  const urlPath = (() => {
+    try {
+      return new URL(finalUrl).pathname.toLowerCase();
+    } catch {
+      return "";
+    }
+  })();
+  const compactText = [
+    title,
+    headings.join(" "),
+    buttons.join(" "),
+    forms.join(" "),
+    visibleText.slice(0, 1200),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const authRoute = /\/(login|log-in|signin|sign-in|auth|session|account\/login)(\/|$)/i.test(
+    urlPath
+  );
+  const authAction =
+    /\b(sign in|sign-in|log in|log-in|login|continue with google|continue with github|forgot password|two-factor|verification code|magic link)\b/i.test(
+      compactText
+    );
+  const hasCredentialForm =
+    passwordFieldCount > 0 ||
+    forms.some((form) => /password|email|username|one-time|otp|verification/i.test(form));
+
+  if (passwordFieldCount > 0) {
+    return { detected: true, reason: "Password field detected on the captured page." };
+  }
+  if (authRoute && (authAction || hasCredentialForm)) {
+    return {
+      detected: true,
+      reason: "The target redirected to an authentication route.",
+    };
+  }
+  if (authAction && hasCredentialForm) {
+    return {
+      detected: true,
+      reason: "The page appears to require sign-in before the product can be tested.",
+    };
+  }
+
+  return undefined;
+}
+
 export async function capturePageEvidence({
   page,
   requestedUrl,
@@ -90,6 +154,10 @@ export async function capturePageEvidence({
         .querySelector("meta[name='description']")
         ?.getAttribute("content") ?? "";
 
+    const passwordFieldCount = document.querySelectorAll(
+      "input[type='password']"
+    ).length;
+
     return {
       title: document.title,
       description,
@@ -98,6 +166,7 @@ export async function capturePageEvidence({
       links: links.map((link) => link.text || link.href),
       linkTargets: links.map((link) => link.href).filter(Boolean),
       forms,
+      passwordFieldCount,
       visibleText: (document.body?.innerText ?? "")
         .replace(/\s+/g, " ")
         .trim()
@@ -131,6 +200,15 @@ export async function capturePageEvidence({
     screenshot: `data:image/jpeg;base64,${screenshotBuffer.toString("base64")}`,
     consoleErrors: compact(consoleErrors),
     networkErrors: compact(networkErrors),
+    authChallenge: detectAuthChallenge({
+      finalUrl: initialFinalUrl,
+      title: pageData.title,
+      headings: pageData.headings,
+      buttons: pageData.buttons,
+      forms: pageData.forms,
+      visibleText: pageData.visibleText,
+      passwordFieldCount: pageData.passwordFieldCount,
+    }),
   };
 }
 
@@ -143,7 +221,12 @@ async function captureLinkedPages({
   currentUrl: string;
   targets: string[];
 }) {
-  const origin = new URL(currentUrl).origin;
+  let origin: string;
+  try {
+    origin = new URL(currentUrl).origin;
+  } catch {
+    return [];
+  }
   const blocked = /logout|log-out|signout|sign-out|delete|remove|unsubscribe/i;
   const urls = Array.from(
     new Set(

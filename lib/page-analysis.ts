@@ -20,6 +20,10 @@ export interface PageEvidence {
   screenshot: string | null;
   consoleErrors: string[];
   networkErrors: string[];
+  authChallenge?: {
+    detected: boolean;
+    reason: string;
+  };
 }
 
 export interface PersonaFinding {
@@ -52,6 +56,7 @@ const FALLBACK_EVIDENCE: PageEvidence = {
   screenshot: null,
   consoleErrors: [],
   networkErrors: [],
+  authChallenge: undefined,
 };
 
 function firstMeaningful(items: string[], fallback: string) {
