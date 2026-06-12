@@ -2,9 +2,15 @@
   "name": "simsai",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "browsers": "playwright install chromium",
+    "check": "npm run lint && npm run build",
+    "postinstall": "playwright install chromium",
     "start": "next start",
     "lint": "eslint"
   },
