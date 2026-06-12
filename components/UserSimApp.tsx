@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import type { PersonaFinding } from "@/lib/page-analysis";
 import { useSimulationEngine } from "@/hooks/useSimulationEngine";
 import { AgentViewfinder } from "@/components/AgentViewfinder";
@@ -52,6 +53,8 @@ const demoSources = [
   },
 ];
 
+const commandChips = ["@buyer", "@security", "@accessibility", "@pricing", "@founder"];
+
 function SimsAiBrand({ compact = false }: { compact?: boolean }) {
   return (
     <div
@@ -77,6 +80,105 @@ function SimsAiBrand({ compact = false }: { compact?: boolean }) {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function IdeShell({
+  active,
+  title,
+  subtitle,
+  progress,
+  children,
+}: {
+  active: "review" | "agents" | "sources" | "report";
+  title: string;
+  subtitle: string;
+  progress: number;
+  children: ReactNode;
+}) {
+  const rail = [
+    { id: "review", label: "Review", mark: "R" },
+    { id: "agents", label: "Agents", mark: "A" },
+    { id: "sources", label: "Sources", mark: "S" },
+    { id: "report", label: "Report", mark: "F" },
+  ] as const;
+
+  return (
+    <main className="ide-stage min-h-[100dvh] p-3 text-white sm:p-5">
+      <section className="ide-window mx-auto flex min-h-[calc(100dvh-1.5rem)] max-w-7xl flex-col overflow-hidden rounded-[18px] sm:min-h-[calc(100dvh-2.5rem)]">
+        <header className="ide-titlebar flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <SimsAiBrand compact />
+            <div className="hidden h-7 w-px bg-white/10 sm:block" />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-[#F2F2F4]">
+                {title}
+              </div>
+              <div className="truncate font-mono text-[10px] text-[#8E8E98]">
+                {subtitle}
+              </div>
+            </div>
+          </div>
+          <div className="hidden items-center gap-2 font-mono text-[10px] text-[#8E8E98] sm:flex">
+            <span className="ide-status-dot" aria-hidden="true" />
+            playwright.local
+          </div>
+        </header>
+
+        <div className="flex min-h-0 flex-1">
+          <aside className="hidden w-[70px] shrink-0 border-r border-white/10 bg-[#090A0D] py-3 md:block">
+            <nav className="flex flex-col items-center gap-2" aria-label="Workspace">
+              {rail.map((item) => (
+                <div
+                  key={item.id}
+                  className={`flex w-full flex-col items-center gap-1 border-l-2 py-2 ${
+                    active === item.id
+                      ? "border-[#79F2A6] text-white"
+                      : "border-transparent text-[#74747D]"
+                  }`}
+                >
+                  <div
+                    className={`grid h-8 w-8 place-items-center rounded-xl border font-mono text-xs ${
+                      active === item.id
+                        ? "border-[#79F2A6]/40 bg-[#79F2A6]/12 text-[#B8FFD0]"
+                        : "border-white/10 bg-white/[0.03]"
+                    }`}
+                  >
+                    {item.mark}
+                  </div>
+                  <span className="text-[10px]">{item.label}</span>
+                </div>
+              ))}
+            </nav>
+          </aside>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="ide-tabs flex min-h-10 items-end gap-1 overflow-x-auto border-b border-white/10 bg-[#0D0E12] px-2 pt-2">
+              {["target.url", "personas.json", "findings.md"].map((tab, index) => (
+                <div
+                  key={tab}
+                  className={`shrink-0 rounded-t-xl border border-b-0 px-3 py-2 font-mono text-[11px] ${
+                    index === 0
+                      ? "border-white/12 bg-[#15161B] text-[#F1F1F3]"
+                      : "border-transparent bg-transparent text-[#777780]"
+                  }`}
+                >
+                  {tab}
+                </div>
+              ))}
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto bg-[#0B0C10]">
+              {children}
+            </div>
+          </div>
+        </div>
+
+        <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#090A0D] px-3 py-1.5 font-mono text-[10px] text-[#8E8E98]">
+          <span>SimsAi workspace</span>
+          <span>{Math.max(0, Math.min(progress, 100))}% indexed</span>
+        </footer>
+      </section>
+    </main>
   );
 }
 
@@ -271,216 +373,283 @@ export function UserSimApp() {
 
   if (screen === "chat") {
     return (
-      <main className="simsai-stage flex min-h-[100dvh] items-center justify-center px-4 py-8 text-white">
-        <section className="w-full max-w-3xl">
-          <div className="mb-8 text-center">
-            <SimsAiBrand />
-            <h1 className="mt-7 text-4xl font-semibold tracking-normal sm:text-5xl">
-              Get a quick read from seven AI personas.
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#B8B8BE]">
-              Paste a link and SimsAi turns the page into clear product,
-              trust, accessibility, and buying feedback.
-            </p>
-          </div>
-
-          <form
-            className="glass-surface simsai-chat-shell overflow-hidden rounded-[32px]"
-            onSubmit={(event) => {
-              event.preventDefault();
-              submitChatRun();
-            }}
-          >
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="simsai-gem h-8 w-8 shrink-0" aria-hidden="true" />
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white">
-                    What should the personas review?
-                  </div>
-                  <div className="truncate text-xs text-[#9FA0A8]">
-                    Works with public URLs and localhost demos.
-                  </div>
-                </div>
+      <IdeShell
+        active="review"
+        title="New persona review"
+        subtitle="Command palette / product-feedback agent"
+        progress={0}
+      >
+        <section className="flex min-h-full items-center justify-center px-4 py-8">
+          <div className="w-full max-w-4xl">
+            <div className="mb-5">
+              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#79F2A6]">
+                SimsAi Composer
               </div>
-              <span className="glass-pill hidden px-3 py-1.5 text-xs text-[#DDFCE8] sm:inline-flex">
-                7 agents
-              </span>
+              <h1 className="mt-3 text-3xl font-semibold tracking-normal text-white sm:text-5xl">
+                Review any product page like it is open in an IDE.
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-[#A7A7B0] sm:text-base">
+                Paste a URL, add persona instructions, and SimsAi runs seven
+                synthetic users against the live surface.
+              </p>
             </div>
-            <textarea
-              value={chatPrompt}
-              onChange={(event) => setChatPrompt(event.target.value)}
-              rows={5}
-              className="block max-h-52 min-h-40 w-full resize-none bg-transparent px-5 py-5 text-[16px] leading-7 text-white outline-none placeholder:text-[#77777F]"
-              placeholder="Paste a URL and say what kind of feedback you want."
-            />
-            <div className="border-t border-white/10 px-4 py-4">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="glass-pill px-3 py-1.5 text-xs text-[#DDFCE8]">
-                  Reviewing: {detectedUrl}
-                </span>
-                <span className="text-xs text-[#8F8F98]">
-                  Live website capture with demo source enrichment.
-                </span>
+
+            <form
+              className="ide-command-panel overflow-hidden rounded-[18px]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                submitChatRun();
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="font-mono text-sm text-[#79F2A6]">cmd</span>
+                  <span className="h-4 w-px bg-white/10" />
+                  <span className="truncate text-sm text-[#D8D8DE]">
+                    Review target with persona agents
+                  </span>
+                </div>
+                <span className="ide-badge hidden sm:inline-flex">7 agents</span>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
-                  {suggestedPrompts.map((prompt) => (
+              <textarea
+                value={chatPrompt}
+                onChange={(event) => setChatPrompt(event.target.value)}
+                rows={5}
+                className="block max-h-56 min-h-40 w-full resize-none bg-[#0F1015] px-4 py-4 font-mono text-[14px] leading-7 text-white outline-none placeholder:text-[#777780]"
+                placeholder="review https://example.com @buyer @accessibility"
+              />
+              <div className="border-t border-white/10 px-4 py-4">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span className="ide-badge">target: {detectedUrl}</span>
+                  {commandChips.map((chip) => (
                     <button
-                      key={prompt}
+                      key={chip}
                       type="button"
-                      onClick={() => setChatPrompt(prompt)}
-                      className="glass-button shrink-0 px-3 py-2 text-left text-xs text-[#C8C8CE]"
+                      onClick={() => setChatPrompt((prompt) => `${prompt} ${chip}`)}
+                      className="ide-chip"
                     >
-                      {prompt}
+                      {chip}
                     </button>
                   ))}
                 </div>
-                <button
-                  type="submit"
-                  className="glass-button glass-button-primary shrink-0 px-5 py-3 text-sm font-semibold"
-                >
-                  Start review
-                </button>
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        onClick={() => setChatPrompt(prompt)}
+                        className="ide-suggestion shrink-0"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="submit"
+                    className="glass-button glass-button-primary shrink-0 px-5 py-3 text-sm font-semibold"
+                  >
+                    Run review
+                  </button>
+                </div>
               </div>
+            </form>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {["Live browser capture", "Persona context graph", "Findings as issues"].map(
+                (item) => (
+                  <div key={item} className="ide-mini-card">
+                    {item}
+                  </div>
+                )
+              )}
             </div>
-          </form>
-          <div className="mt-5 grid gap-2 text-center text-xs text-[#9A9AA2] sm:grid-cols-3">
-            <div className="glass-pill px-3 py-2">No setup needed</div>
-            <div className="glass-pill px-3 py-2">Reads the live page</div>
-            <div className="glass-pill px-3 py-2">Plain-English report</div>
           </div>
         </section>
-      </main>
+      </IdeShell>
     );
   }
 
   if (screen === "process") {
     return (
-      <main className="simsai-stage min-h-[100dvh] px-4 py-6 text-white">
-        <section className="mx-auto grid max-w-5xl gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <SimsAiBrand compact />
-              <div className="h-10 w-px bg-white/10" />
-              <h1 className="mt-1 text-2xl font-semibold">
-                Reviewing {detectedUrl}
-              </h1>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={pause}
-                disabled={phase !== "RUNNING"}
-                className="glass-button px-3 py-2 text-sm"
-              >
-                Pause
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  stop();
-                  setScreen("report");
-                }}
-                className="glass-button px-3 py-2 text-sm text-[#B8B8BE]"
-              >
-                Finish now
-              </button>
-            </div>
-          </div>
-
-          <section className="glass-surface rounded-[28px] px-5 py-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <IdeShell
+        active="agents"
+        title={`Reviewing ${detectedUrl}`}
+        subtitle={`${completedAgents}/${PERSONA_AGENTS.length} agents complete / ${activeAgents} active`}
+        progress={progress}
+      >
+        <section className="grid min-h-full grid-rows-[auto_1fr]">
+          <div className="border-b border-white/10 bg-[#101116] px-4 py-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-medium">
+                <div className="text-sm font-medium text-white">
                   {analysis
                     ? `Captured ${analysis.evidence.title || analysis.evidence.finalUrl}`
                     : analysisError
                       ? `Inspection issue: ${analysisError}`
                       : "Opening page locally"}
                 </div>
-                <div className="mt-1 text-sm text-[#A8A8AF]">
-                  {completedAgents}/{PERSONA_AGENTS.length} agents complete · {activeAgents} active
+                <div className="mt-1 font-mono text-[11px] text-[#8E8E98]">
+                  {completedAgents}/{PERSONA_AGENTS.length} complete / {activeAgents} active / {progress}%
                 </div>
               </div>
-              <div className="font-mono text-sm text-[#D8D8DC]">{progress}%</div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={pause}
+                  disabled={phase !== "RUNNING"}
+                  className="glass-button px-3 py-2 text-sm"
+                >
+                  Pause
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    stop();
+                    setScreen("report");
+                  }}
+                  className="glass-button px-3 py-2 text-sm text-[#B8B8BE]"
+                >
+                  Finish now
+                </button>
+              </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-5">
+            <div className="grid gap-2 sm:grid-cols-6">
               {runSteps.map((step, index) => {
                 const active = index <= runStepIndex;
                 return (
-                  <div key={step}>
-                    <div className={`mb-2 h-1.5 ${active ? "bg-white" : "bg-white/10"}`} />
-                    <div className={`text-xs ${active ? "text-white" : "text-[#77777F]"}`}>
+                  <div key={step} className="min-w-0">
+                    <div
+                      className={`mb-1 h-1 rounded-full ${
+                        active ? "bg-[#79F2A6]" : "bg-white/10"
+                      }`}
+                    />
+                    <div
+                      className={`truncate font-mono text-[10px] ${
+                        active ? "text-[#C8FFD8]" : "text-[#777780]"
+                      }`}
+                    >
                       {step}
                     </div>
                   </div>
                 );
               })}
             </div>
-          </section>
+          </div>
 
-          <section className="grid gap-3 md:grid-cols-4">
-            {demoSources.map((source, index) => {
-              const active =
-                source.status === "Live" ||
-                progress >= 22 + index * 12 ||
-                Boolean(analysis);
-              return (
-                <article
-                  key={source.name}
-                  className={`rounded-3xl border p-4 backdrop-blur ${
-                    active
-                      ? "border-white/20 bg-white/[0.06]"
-                      : "border-white/10 bg-white/[0.025]"
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <h2 className="text-sm font-semibold text-white">
-                      {source.name}
-                    </h2>
-                    <span className="glass-pill px-2 py-1 font-mono text-[10px] uppercase text-[#D8D8DE]">
-                      {source.status}
-                    </span>
-                  </div>
-                  <p className="text-xs leading-5 text-[#A8A8AF]">
-                    {source.detail}
-                  </p>
-                </article>
-              );
-            })}
-          </section>
+          <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+            <aside className="min-h-0 border-b border-white/10 bg-[#0D0E12] xl:border-b-0 xl:border-r">
+              <div className="border-b border-white/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#8E8E98]">
+                personas.json
+              </div>
+              <div className="grid max-h-72 gap-1 overflow-y-auto p-2 sm:grid-cols-2 xl:max-h-none xl:grid-cols-1">
+                {agentRuns.map((agent) => (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => setSelectedAgentId(agent.id)}
+                    className={`rounded-xl border px-3 py-2 text-left ${
+                      selectedAgentId === agent.id
+                        ? "border-[#79F2A6]/45 bg-[#79F2A6]/12"
+                        : "border-transparent bg-white/[0.025] hover:border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-white">
+                        {agent.name}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#8E8E98]">
+                        {agent.progress}%
+                      </span>
+                    </div>
+                    <div className="mt-1 truncate text-xs text-[#8E8E98]">
+                      {agent.title}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </aside>
 
-          <section className="min-h-[520px]">
-            <AgentViewfinder
-              agent={selectedAgent}
-              finding={selectedFinding}
-              evidence={analysis?.evidence ?? null}
-              analyzing={analyzingUrl}
-              phase={phase}
-              targetUrl={targetUrl}
-            />
-          </section>
+            <div className="min-h-[520px] p-3">
+              <AgentViewfinder
+                agent={selectedAgent}
+                finding={selectedFinding}
+                evidence={analysis?.evidence ?? null}
+                analyzing={analyzingUrl}
+                phase={phase}
+                targetUrl={targetUrl}
+              />
+            </div>
+
+            <aside className="grid min-h-0 grid-rows-[auto_minmax(180px,1fr)_260px] border-t border-white/10 bg-[#0D0E12] xl:border-l xl:border-t-0">
+              <div className="border-b border-white/10 p-3">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#8E8E98]">
+                  sources
+                </div>
+                <div className="mt-3 grid gap-2">
+                  {demoSources.map((source, index) => {
+                    const active =
+                      source.status === "Live" ||
+                      progress >= 22 + index * 12 ||
+                      Boolean(analysis);
+                    return (
+                      <div
+                        key={source.name}
+                        className={`rounded-xl border px-3 py-2 ${
+                          active
+                            ? "border-[#79F2A6]/25 bg-[#79F2A6]/10"
+                            : "border-white/10 bg-white/[0.025]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-white">{source.name}</span>
+                          <span className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                            {source.status}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="min-h-0 overflow-y-auto p-3">
+                <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[#8E8E98]">
+                  active thought
+                </div>
+                <div className="rounded-xl border border-white/10 bg-black/25 p-3 text-sm leading-6 text-[#D8D8DE]">
+                  {selectedFinding?.quote ?? selectedAgent.quote}
+                </div>
+                <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-3 text-sm leading-6 text-[#B8B8BE]">
+                  {selectedFinding?.recommendation ?? selectedAgent.recommendation}
+                </div>
+              </div>
+              <div className="min-h-0 border-t border-white/10">
+                <TelemetryTerminal lines={logLines} phase={phase} />
+              </div>
+            </aside>
+          </div>
         </section>
-      </main>
+      </IdeShell>
     );
   }
 
   return (
-      <main className="simsai-stage min-h-[100dvh] px-4 py-6 text-white">
-      <section className="mx-auto grid max-w-6xl gap-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <IdeShell
+      active="report"
+      title={analysis?.evidence.title || "Persona review complete"}
+      subtitle={analysis?.evidence.finalUrl || targetUrl}
+      progress={100}
+    >
+      <section className="grid gap-4 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 pb-4">
           <div>
-            <div className="mb-4">
-              <SimsAiBrand compact />
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#79F2A6]">
+              findings.md
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#9B9BA1]">
-              Final report
-            </div>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal text-white sm:text-4xl">
               {analysis?.evidence.title || "Persona review complete"}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#A8A8AF]">
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#A8A8AF]">
               {analysis
                 ? `Captured ${analysis.evidence.finalUrl}. ${analysis.evidence.headings.length} headings, ${analysis.evidence.buttons.length} buttons, and ${analysis.evidence.forms.length} form signals were reviewed.`
                 : "The review used the built-in demo persona matrix because no page capture was available."}
@@ -511,80 +680,83 @@ export function UserSimApp() {
           </div>
         </div>
 
-        <section className="glass-surface rounded-3xl p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold">Context sources</h2>
-              <p className="mt-1 text-sm text-[#A8A8AF]">
-                This demo uses the website live and shows how social/search/community data would plug into the same persona swarm.
-              </p>
-            </div>
-            <span className="glass-pill px-3 py-1.5 text-xs text-[#D8D8DE]">
-              Demo enrichment layer
-            </span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            {demoSources.map((source) => (
-              <article
-                key={source.name}
-                className="rounded-2xl border border-white/10 bg-black/30 p-3"
-              >
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-white">
-                    {source.name}
-                  </h3>
-                  <span className="font-mono text-[10px] uppercase text-[#A8A8AF]">
-                    {source.status}
-                  </span>
-                </div>
-                <p className="text-xs leading-5 text-[#B8B8BE]">
-                  {source.detail}
-                </p>
-              </article>
-            ))}
-          </div>
+        <section className="grid gap-3 lg:grid-cols-4">
+          {demoSources.map((source) => (
+            <article key={source.name} className="ide-panel p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-white">{source.name}</h3>
+                <span className="font-mono text-[10px] uppercase text-[#8E8E98]">
+                  {source.status}
+                </span>
+              </div>
+              <p className="text-xs leading-5 text-[#B8B8BE]">{source.detail}</p>
+            </article>
+          ))}
         </section>
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {findingCards.map((card) => {
-            if (!card) return null;
-            return (
-              <article
-                key={card.id}
-                className={`rounded-3xl border p-4 shadow-xl shadow-black/20 backdrop-blur ${severityTone[card.severity]}`}
-              >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-white">
-                      {card.agent.name}
+        <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-3">
+            {findingCards.map((card, index) => {
+              if (!card) return null;
+              return (
+                <article
+                  key={card.id}
+                  className={`ide-issue border-l-2 ${severityTone[card.severity]}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#8E8E98]">
+                        issue {String(index + 1).padStart(2, "0")} / {card.agent.name}
+                      </div>
+                      <h2 className="mt-2 text-base font-semibold leading-6 text-white">
+                        {card.title}
+                      </h2>
                     </div>
-                    <div className="mt-0.5 text-xs text-[#B8B8BE]">
-                      {card.agent.title}
-                    </div>
+                    <span className="ide-badge">{card.severity}</span>
                   </div>
-                  <span className="font-mono text-[10px] uppercase">
-                    {card.severity}
-                  </span>
-                </div>
-                <h2 className="text-base font-semibold leading-6 text-white">
-                  {card.title}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-[#D8D8DE]">
-                  {card.recommendation}
-                </p>
-                <div className="mt-4 border-t border-white/10 pt-3 text-xs leading-5 text-[#B8B8BE]">
-                  {card.evidence}
-                </div>
-                <div className="mt-4 text-xs text-[#8F8F98]">
-                  {card.confidence}% confidence ·{" "}
-                  {card.isLive ? "real page finding" : "demo fallback"}
-                </div>
-              </article>
-            );
-          })}
+                  <p className="mt-3 text-sm leading-6 text-[#D8D8DE]">
+                    {card.recommendation}
+                  </p>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-3 font-mono text-[11px] leading-5 text-[#A8A8AF]">
+                    {card.evidence}
+                  </div>
+                  <div className="mt-3 text-xs text-[#8F8F98]">
+                    {card.confidence}% confidence /{" "}
+                    {card.isLive ? "real page finding" : "demo fallback"}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <aside className="ide-panel overflow-hidden">
+            <div className="border-b border-white/10 px-4 py-3">
+              <div className="text-sm font-medium">Persona inspector</div>
+              <div className="mt-1 text-xs text-[#A8A8AF]">
+                Click a persona to inspect its final reasoning.
+              </div>
+            </div>
+            <div className="grid max-h-[540px] gap-2 overflow-y-auto p-3">
+              {agentRuns.map((agent) => (
+                <button
+                  key={agent.id}
+                  type="button"
+                  onClick={() => setSelectedAgentId(agent.id)}
+                  className={`rounded-xl border p-3 text-left ${
+                    selectedAgentId === agent.id
+                      ? "border-[#79F2A6]/45 bg-[#79F2A6]/12"
+                      : "border-white/10 bg-white/[0.025]"
+                  }`}
+                >
+                  <div className="text-sm font-semibold text-white">{agent.name}</div>
+                  <div className="mt-1 text-xs text-[#A8A8AF]">{agent.title}</div>
+                </button>
+              ))}
+            </div>
+          </aside>
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-h-[480px]">
             <AgentViewfinder
               agent={selectedAgent}
@@ -595,62 +767,32 @@ export function UserSimApp() {
               targetUrl={targetUrl}
             />
           </div>
-          <aside className="glass-surface overflow-hidden rounded-3xl">
-            <div className="border-b border-white/10 px-4 py-3">
-              <div className="text-sm font-medium">Persona details</div>
-              <div className="mt-1 text-xs text-[#A8A8AF]">
-                Select a persona to inspect its reasoning.
-              </div>
-            </div>
-            <div className="grid max-h-[520px] gap-2 overflow-y-auto p-3 sm:grid-cols-2 xl:grid-cols-1">
-              {agentRuns.map((agent) => (
-                <button
-                  key={agent.id}
-                  type="button"
-                  onClick={() => setSelectedAgentId(agent.id)}
-                  className={`rounded-2xl border p-3 text-left ${
-                    selectedAgentId === agent.id
-                      ? "border-white bg-white/90 text-black shadow-lg shadow-white/10"
-                      : "glass-button text-white"
-                  }`}
-                >
-                  <div className="text-sm font-semibold">{agent.name}</div>
-                  <div
-                    className={`mt-1 text-xs ${
-                      selectedAgentId === agent.id
-                        ? "text-black/70"
-                        : "text-[#A8A8AF]"
-                    }`}
-                  >
-                    {agent.title}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </aside>
-        </section>
-
-        <section className="glass-surface overflow-hidden rounded-3xl">
-          <button
-            type="button"
-            onClick={() => setTraceOpen((open) => !open)}
-            className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left"
-          >
-            <span>
-              <span className="block text-sm font-medium">Technical trace</span>
-              <span className="mt-1 block text-xs text-[#A8A8AF]">
-                Optional browser and agent event stream.
+          <section className="ide-panel overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setTraceOpen((open) => !open)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <span>
+                <span className="block text-sm font-medium">Terminal trace</span>
+                <span className="mt-1 block text-xs text-[#A8A8AF]">
+                  Browser and agent event stream.
+                </span>
               </span>
-            </span>
-            <span className="font-mono text-xs text-[#A8A8AF]">
-              {traceOpen ? "Hide" : "Show"}
-            </span>
-          </button>
-          {traceOpen ? (
-            <div className="h-72 border-t border-white/10">
-              <TelemetryTerminal lines={logLines} phase={phase} />
-            </div>
-          ) : null}
+              <span className="font-mono text-xs text-[#A8A8AF]">
+                {traceOpen ? "Hide" : "Show"}
+              </span>
+            </button>
+            {traceOpen ? (
+              <div className="h-[calc(100%-64px)] min-h-72 border-t border-white/10">
+                <TelemetryTerminal lines={logLines} phase={phase} />
+              </div>
+            ) : (
+              <div className="h-72 border-t border-white/10">
+                <TelemetryTerminal lines={logLines} phase={phase} />
+              </div>
+            )}
+          </section>
         </section>
       </section>
 
@@ -660,6 +802,6 @@ export function UserSimApp() {
         markdown={reportMd}
         revealKey={reportRevealKey}
       />
-    </main>
+    </IdeShell>
   );
 }
