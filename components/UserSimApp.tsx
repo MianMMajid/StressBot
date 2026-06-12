@@ -76,7 +76,7 @@ function buildLiveReportMarkdown({
   outcome: "COMPLETED" | "STOPPED";
   analysis: NonNullable<ReturnType<typeof useSimulationEngine>["analysis"]>;
 }) {
-  return `# UserSim Live Page Report
+  return `# StressBot Live Page Report
 
 **Requested URL:** \`${targetUrl}\`  
 **Captured URL:** \`${analysis.evidence.finalUrl}\`  
@@ -247,13 +247,13 @@ export function UserSimApp() {
         <section className="w-full max-w-3xl">
           <div className="mb-8 text-center">
             <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[#9B9BA1]">
-              UserSim
+              StressBot
             </div>
             <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
               Ask seven AI personas to review any product page.
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#B8B8BE]">
-              Paste a public URL or localhost link. UserSim opens it locally,
+              Paste a public URL or localhost link. StressBot opens it locally,
               captures the page, and shows how outside context could enrich the
               persona panel.
             </p>
@@ -317,7 +317,7 @@ export function UserSimApp() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#9B9BA1]">
-                UserSim
+                StressBot
               </div>
               <h1 className="mt-1 text-2xl font-semibold">
                 Reviewing {detectedUrl}
