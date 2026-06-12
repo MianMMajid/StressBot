@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { AnalyzeResult } from "@/lib/page-analysis";
 import {
   PERSONA_AGENTS,
   SimulationPhase,
@@ -24,6 +25,9 @@ export function useSimulationEngine() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [reportRevealKey, setReportRevealKey] = useState(0);
   const [selectedAgentId, setSelectedAgentId] = useState(PERSONA_AGENTS[0].id);
+  const [analysis, setAnalysis] = useState<AnalyzeResult | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analyzingUrl, setAnalyzingUrl] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -57,12 +61,47 @@ export function useSimulationEngine() {
 
       setLogLines([]);
       setDrawerOpen(false);
+      setAnalysis(null);
+      setAnalysisError(null);
       setSelectedAgentId(PERSONA_AGENTS[0].id);
       setProgress(PROGRESS_STEP);
       appendTelemetryBatch(PROGRESS_STEP);
       return "RUNNING";
     });
   }, [appendTelemetryBatch]);
+
+  const analyzeCurrentUrl = useCallback(async (url: string) => {
+    setAnalyzingUrl(true);
+    setAnalysisError(null);
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? "URL analysis failed");
+      }
+
+      const result = (await response.json()) as AnalyzeResult;
+      setAnalysis(result);
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "URL analysis failed");
+    } finally {
+      setAnalyzingUrl(false);
+    }
+  }, []);
+
+  const runWithAnalysis = useCallback((urlOverride?: string) => {
+    const analysisUrl = urlOverride ?? targetUrl;
+    run();
+    void analyzeCurrentUrl(analysisUrl);
+  }, [analyzeCurrentUrl, run, targetUrl]);
 
   const pause = useCallback(() => {
     setPhase((p) => (p === "RUNNING" ? "PAUSED" : p));
@@ -138,11 +177,14 @@ export function useSimulationEngine() {
     drawerOpen,
     setDrawerOpen,
     reportRevealKey,
+    analysis,
+    analysisError,
+    analyzingUrl,
     selectedAgent,
     selectedAgentId,
     setSelectedAgentId,
     agentRuns,
-    run,
+    run: runWithAnalysis,
     pause,
     stop,
     clearLoop,
