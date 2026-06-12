@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const page = await browser.newPage({
       viewport: { width: 1365, height: 900 },
       userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 StressBotLocal/1.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 SimsAiLocal/1.0",
     });
 
     const consoleErrors: string[] = [];
