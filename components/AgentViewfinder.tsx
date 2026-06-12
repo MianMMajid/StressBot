@@ -13,7 +13,7 @@ function ChromeBar({ url }: { url: string }) {
         <span className="h-2 w-2 border border-white/10 bg-[#2A2A2D]" />
         <span className="h-2 w-2 border border-white/10 bg-[#2A2A2D]" />
       </div>
-      <div className="min-w-0 flex-1 truncate border border-white/10 bg-black/60 px-2 py-0.5 font-mono text-[9px] text-[#B8B8BE]">
+      <div className="glass-pill min-w-0 flex-1 truncate px-2 py-0.5 font-mono text-[9px] text-[#B8B8BE]">
         {display}
       </div>
     </div>
@@ -61,7 +61,7 @@ export function AgentViewfinder({
 
   return (
     <div
-      className={`flex h-full min-h-[340px] flex-col border border-white/10 bg-[#101012] ${
+      className={`glass-surface flex h-full min-h-[340px] flex-col overflow-hidden rounded-3xl ${
         frozen ? "opacity-80" : ""
       }`}
     >
@@ -99,7 +99,7 @@ export function AgentViewfinder({
             </span>
           </div>
 
-          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden border border-white/10 bg-[#141416] shadow-xl shadow-black/30">
+          <div className="relative mx-auto flex h-full max-w-xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#141416]/90 shadow-xl shadow-black/30 backdrop-blur">
             <div
               className={`pointer-events-none absolute h-20 w-20 border border-white/70 ${
                 running ? "live-drift" : ""
@@ -138,7 +138,7 @@ export function AgentViewfinder({
                 {["Hero", "Proof", "Action"].map((label, index) => (
                   <div
                     key={label}
-                    className={`border px-2 py-2 font-mono text-[9px] uppercase ${
+                    className={`rounded-full border px-2 py-2 text-center font-mono text-[9px] uppercase ${
                       index === Math.floor(agent.progress / 24) % 3
                         ? "border-white bg-white text-black"
                         : "border-white/10 bg-black/50 text-[#A8A8AF]"
@@ -154,7 +154,7 @@ export function AgentViewfinder({
                   Current surface - agent trace
                 </div>
                 {evidence?.screenshot ? (
-                  <div className="relative max-h-48 overflow-hidden border border-white/10 bg-black">
+                  <div className="relative max-h-48 overflow-hidden rounded-2xl border border-white/10 bg-black">
                     <Image
                       src={evidence.screenshot}
                       alt={`Screenshot captured from ${evidence.finalUrl}`}
@@ -168,18 +168,18 @@ export function AgentViewfinder({
                     </div>
                   </div>
                 ) : (
-                  <div className="border border-white/10 bg-black/50 p-4 text-sm leading-6 text-white">
+                  <div className="rounded-2xl border border-white/10 bg-black/50 p-4 text-sm leading-6 text-white">
                     {visibleSurface}
                   </div>
                 )}
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <div className="border border-white/10 bg-black/40 p-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
                     <div className="mb-1 text-xs text-[#A8A8AF]">
                       Friction
                     </div>
                     <div className="text-sm text-white">{visibleSignal}</div>
                   </div>
-                  <div className="border border-white/10 bg-black/40 p-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
                     <div className="mb-1 text-xs text-[#A8A8AF]">
                       Evidence
                     </div>
@@ -189,7 +189,7 @@ export function AgentViewfinder({
                         : Math.max(1, Math.round(agent.progress / 13))}
                     </div>
                   </div>
-                  <div className="border border-white/10 bg-black/40 p-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
                     <div className="mb-1 text-xs text-[#A8A8AF]">
                       Confidence
                     </div>
@@ -226,14 +226,14 @@ export function AgentViewfinder({
             <p className="mt-1 text-sm text-[#C8C8C8]">{agent.title}</p>
           </div>
 
-          <div className="border border-white/10 bg-black/40 p-3">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
             <div className="mb-2 text-xs text-[#A8A8AF]">
               Persona
             </div>
             <p className="text-sm leading-6 text-[#D8D8D8]">{agent.persona}</p>
           </div>
 
-          <div className="border border-white/10 bg-black/40 p-3">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
             <div className="mb-2 text-xs text-[#A8A8AF]">
               Think-aloud
             </div>
@@ -242,7 +242,7 @@ export function AgentViewfinder({
             </blockquote>
           </div>
 
-          <div className="border border-white/10 bg-black/40 p-3">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
             <div className="mb-2 text-xs text-[#A8A8AF]">
               Recommended fix
             </div>
@@ -252,7 +252,7 @@ export function AgentViewfinder({
           </div>
 
           {finding ? (
-            <div className="border border-white/10 bg-black/40 p-3">
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-3">
               <div className="mb-2 text-xs text-[#A8A8AF]">
                 Page evidence
               </div>

@@ -37,7 +37,7 @@ export function BugReportDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="bug-report-title"
-        className={`fixed inset-x-0 bottom-0 z-50 max-h-[88vh] border-t border-[#222222] bg-[#0A0A0A] transition-transform duration-300 ease-out ${
+        className={`fixed inset-x-0 bottom-0 z-50 max-h-[88vh] rounded-t-[28px] border-t border-white/10 bg-[#0A0A0A]/95 shadow-2xl shadow-black/50 backdrop-blur-xl transition-transform duration-300 ease-out ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -52,7 +52,7 @@ export function BugReportDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="border border-[#222222] bg-black px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[#888888] hover:border-white hover:text-white"
+              className="glass-button px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[#D8D8DE]"
             >
               Close
             </button>

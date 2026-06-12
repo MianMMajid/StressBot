@@ -224,7 +224,7 @@ export function UserSimApp() {
           </div>
 
           <form
-            className="border border-white/10 bg-[#111113] shadow-2xl shadow-black/40"
+            className="glass-surface overflow-hidden rounded-[28px]"
             onSubmit={(event) => {
               event.preventDefault();
               submitChatRun();
@@ -239,7 +239,7 @@ export function UserSimApp() {
             />
             <div className="border-t border-white/10 px-4 py-4">
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="border border-white/10 bg-black px-3 py-1.5 text-xs text-[#D8D8DC]">
+                <span className="glass-pill px-3 py-1.5 text-xs text-[#D8D8DC]">
                   Target: {detectedUrl}
                 </span>
                 <span className="text-xs text-[#8F8F98]">
@@ -253,7 +253,7 @@ export function UserSimApp() {
                       key={prompt}
                       type="button"
                       onClick={() => setChatPrompt(prompt)}
-                      className="shrink-0 border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-xs text-[#C8C8CE] hover:border-white/40 hover:text-white"
+                      className="glass-button shrink-0 px-3 py-2 text-left text-xs text-[#C8C8CE]"
                     >
                       {prompt}
                     </button>
@@ -261,7 +261,7 @@ export function UserSimApp() {
                 </div>
                 <button
                   type="submit"
-                  className="shrink-0 border border-white bg-white px-5 py-3 text-sm font-semibold text-black"
+                  className="glass-button glass-button-primary shrink-0 px-5 py-3 text-sm font-semibold"
                 >
                   Start review
                 </button>
@@ -291,7 +291,7 @@ export function UserSimApp() {
                 type="button"
                 onClick={pause}
                 disabled={phase !== "RUNNING"}
-                className="border border-white/10 bg-[#151517] px-3 py-2 text-sm text-white disabled:opacity-30"
+                className="glass-button px-3 py-2 text-sm"
               >
                 Pause
               </button>
@@ -301,7 +301,7 @@ export function UserSimApp() {
                   stop();
                   setScreen("report");
                 }}
-                className="border border-white/10 bg-black px-3 py-2 text-sm text-[#B8B8BE]"
+                className="glass-button px-3 py-2 text-sm text-[#B8B8BE]"
               >
                 Finish now
               </button>
@@ -375,21 +375,21 @@ export function UserSimApp() {
             <button
               type="button"
               onClick={copyReport}
-              className="border border-white/10 bg-[#151517] px-3 py-2 text-sm text-white"
+              className="glass-button px-3 py-2 text-sm"
             >
               {copied ? "Copied" : "Copy report"}
             </button>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="border border-white/10 bg-[#151517] px-3 py-2 text-sm text-white"
+              className="glass-button px-3 py-2 text-sm"
             >
               Markdown
             </button>
             <button
               type="button"
               onClick={resetFlow}
-              className="border border-white bg-white px-3 py-2 text-sm font-semibold text-black"
+              className="glass-button glass-button-primary px-3 py-2 text-sm font-semibold"
             >
               Run another
             </button>
@@ -402,7 +402,7 @@ export function UserSimApp() {
             return (
               <article
                 key={card.id}
-                className={`border p-4 ${severityTone[card.severity]}`}
+                className={`rounded-3xl border p-4 shadow-xl shadow-black/20 backdrop-blur ${severityTone[card.severity]}`}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
@@ -446,7 +446,7 @@ export function UserSimApp() {
               targetUrl={targetUrl}
             />
           </div>
-          <aside className="border border-white/10 bg-[#101012]">
+          <aside className="glass-surface overflow-hidden rounded-3xl">
             <div className="border-b border-white/10 px-4 py-3">
               <div className="text-sm font-medium">Persona details</div>
               <div className="mt-1 text-xs text-[#A8A8AF]">
@@ -459,10 +459,10 @@ export function UserSimApp() {
                   key={agent.id}
                   type="button"
                   onClick={() => setSelectedAgentId(agent.id)}
-                  className={`border p-3 text-left ${
+                  className={`rounded-2xl border p-3 text-left ${
                     selectedAgentId === agent.id
-                      ? "border-white bg-white text-black"
-                      : "border-white/10 bg-black/40 text-white hover:border-white/30"
+                      ? "border-white bg-white/90 text-black shadow-lg shadow-white/10"
+                      : "glass-button text-white"
                   }`}
                 >
                   <div className="text-sm font-semibold">{agent.name}</div>
@@ -481,11 +481,11 @@ export function UserSimApp() {
           </aside>
         </section>
 
-        <section className="border border-white/10 bg-[#101012]">
+        <section className="glass-surface overflow-hidden rounded-3xl">
           <button
             type="button"
             onClick={() => setTraceOpen((open) => !open)}
-            className="flex w-full items-center justify-between px-4 py-3 text-left"
+            className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left"
           >
             <span>
               <span className="block text-sm font-medium">Technical trace</span>
