@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SimsAi
 
-## Getting Started
+SimsAi is a local Next.js demo that runs seven AI-style persona agents against any website URL. It captures the page with Playwright, animates multiple cursors through the inspected surface, handles login-gated sites with a manual browser handoff, and produces a severity-coded report.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20.9 or newer
+- npm
+- macOS, Windows, or Linux with a desktop browser environment for the manual-login demo
+
+No API keys or environment variables are required.
+
+## Run Locally
 
 ```bash
+git clone https://github.com/MianMMajid/StressBot.git
+cd StressBot
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`npm install` also installs the Playwright Chromium browser needed for live page capture. If the browser install is interrupted, run:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run browsers
+```
 
-## Learn More
+## Demo Flow
 
-To learn more about Next.js, take a look at the following resources:
+1. Paste a URL into the SimsAi composer.
+2. Click `Run review`.
+3. Watch the seven persona agents inspect the page and same-site routes.
+4. If SimsAi detects a login page, a local browser window opens. Log in there, then return to SimsAi and click `Continue after login`.
+5. Review the final severity-coded report.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Useful Commands
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev      # start the local demo
+npm run check    # run lint and production build
+npm run build    # build for production
+npm run start    # serve the production build
+```
 
-## Deploy on Vercel
+## Troubleshooting
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- If live capture fails with a browser executable error, run `npm run browsers`.
+- If port `3000` is already in use, Next.js will offer another local port in the terminal.
+- Some websites block automated browsers. SimsAi will still show a fallback report instead of crashing.
